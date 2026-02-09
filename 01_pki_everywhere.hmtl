@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PKI Everywhere Is an Architectural Smell</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .stat-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 200px;
+        }
+        .stat-label {
+            font-size: 16px;
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .comparison-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .comparison-card.bad li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: #E53E3E;
+            font-weight: 700;
+        }
+        .comparison-card.good li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38A169;
+            font-weight: 700;
+        }
+        .diagram {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+        .state-machine {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .state {
+            background: white;
+            border: 2px solid #4299E1;
+            border-radius: 8px;
+            padding: 16px 24px;
+            font-weight: 600;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+        .state-count {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #E53E3E;
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .arrow {
+            color: #4299E1;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        code {
+            background: #F7FAFC;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 18px;
+            color: #E53E3E;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .visual-bar {
+            height: 60px;
+            background: linear-gradient(90deg, #E53E3E 0%, #FC8181 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            position: relative;
+            animation: slideIn 1s ease-out;
+            margin: 16px 0;
+        }
+        .visual-bar.good {
+            background: linear-gradient(90deg, #38A169 0%, #68D391 100%);
+        }
+        @keyframes slideIn {
+            from { width: 0; opacity: 0; }
+            to { width: 100%; opacity: 1; }
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 1 of 8</div>
+            <h1>PKI Everywhere Is an Architectural Smell</h1>
+            <div class="subtitle">Why applying enterprise security patterns blindly breaks determinism, certification, and operations</div>
+        </div>
+
+        <p>You're in a design review for your new aircraft ground support system. The security team presents their architecture: <strong>"We'll use PKI and TLS for all authentication and data protection—industry best practices."</strong></p>
+
+        <p>The slide deck looks impeccable. Clean certificate hierarchy diagram. Comprehensive key management lifecycle. Mutual TLS handshake sequence. References to NIST SP 800-57 and DO-326A.</p>
+
+        <p>It checks every box for "modern cybersecurity."</p>
+
+        <p>There's <strong>one problem: it'll never survive certification.</strong></p>
+
+        <p>Not because PKI is fundamentally flawed. But because applying enterprise security patterns without adaptation creates unbounded state machines, runtime dependencies that collapse operational reliability, and non-deterministic behavior that conflicts with safety requirements.</p>
+
+        <h2>Two Worlds, One Mistake</h2>
+
+        <p>Let me show you why the same security approach works brilliantly in one context and catastrophically fails in another.</p>
+
+        <h3>The Enterprise IT Context</h3>
+
+        <p>In enterprise IT, PKI + TLS is not just reasonable—it's often optimal. The environment assumes:</p>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>Enterprise IT Assumptions</h4>
+                <ul>
+                    <li>Abundant compute resources (cloud, servers)</li>
+                    <li>Always-on network connectivity</li>
+                    <li>Elastic scaling (spin up more instances)</li>
+                    <li>Graceful degradation ("please try again")</li>
+                    <li>Retry logic acceptable</li>
+                    <li>Soft failures expected</li>
+                </ul>
+            </div>
+            <div class="comparison-card good">
+                <h4>Safety-Critical Embedded Reality</h4>
+                <ul>
+                    <li>Constrained compute (microcontrollers, RTOS)</li>
+                    <li>Intermittent or no connectivity</li>
+                    <li>Fixed resources (no elastic scaling)</li>
+                    <li>Deterministic behavior required</li>
+                    <li>No retry ambiguity</li>
+                    <li>Hard failures only</li>
+                </ul>
+            </div>
+        </div>
+
+        <p>In enterprise IT, security decisions work because:</p>
+        <ul>
+            <li><strong>Failure is acceptable</strong> → Service degrades, users retry</li>
+            <li><strong>Network is reliable</strong> → OCSP/CRL lookups usually succeed</li>
+            <li><strong>Time is available</strong> → Authentication can take seconds</li>
+            <li><strong>Compute is cheap</strong> → ASN.1 parsing overhead doesn't matter</li>
+        </ul>
+
+        <h3>The Safety-Critical Reality</h3>
+
+        <p>In avionics and safety-critical embedded systems, <strong>every single assumption breaks:</strong></p>
+
+        <ul>
+            <li><strong>Failure must be deterministic</strong> → FHA/FMEA analysis requires specified behavior for every input</li>
+            <li><strong>Network is unreliable</strong> → OCSP/CRL dependencies break operations at remote maintenance facilities</li>
+            <li><strong>Time is constrained</strong> → Authentication budgets measured in seconds (≤15s for ground ops)</li>
+            <li><strong>Compute is expensive</strong> → Every CPU cycle costs certification effort</li>
+        </ul>
+
+        <h2>The Certification Problem: State Machine Explosion</h2>
+
+        <p>Let's get specific. You're certifying a DAL B avionics system under DO-178C/DO-326A. Your security architecture includes TLS with full PKI.</p>
+
+        <p>The DER asks: <strong>"Show me your failure mode analysis for certificate chain validation during ground operations."</strong></p>
+
+        <h3>Counting the States</h3>
+
+        <p>A minimal TLS 1.3 handshake already has significant state complexity:</p>
+
+        <div class="diagram">
+            <div class="state-machine">
+                <div class="state">
+                    TLS Handshake
+                    <div class="state-count">11</div>
+                </div>
+                <div class="arrow">+</div>
+                <div class="state">
+                    Certificate Processing
+                    <div class="state-count">8</div>
+                </div>
+                <div class="arrow">+</div>
+                <div class="state">
+                    Revocation Checks
+                    <div class="state-count">9</div>
+                </div>
+                <div class="arrow">+</div>
+                <div class="state">
+                    Error Handling
+                    <div class="state-count">40</div>
+                </div>
+                <div class="arrow">+</div>
+                <div class="state">
+                    Retry Logic
+                    <div class="state-count">8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>76 states total.</strong> Each needs: formal specification, MC/DC test coverage, timing analysis, and FMEA entries.
+        </div>
+
+        <p><strong>Breaking it down:</strong></p>
+
+        <p><strong>TLS Handshake (11 states):</strong> IDLE, CLIENT_HELLO_SENT, SERVER_HELLO_RECEIVED, ENCRYPTED_EXTENSIONS_RECEIVED, CERTIFICATE_REQUEST (optional), CERTIFICATE_RECEIVED, CERTIFICATE_VERIFY_RECEIVED, FINISHED_RECEIVED, APPLICATION_DATA_READY, CONNECTION_CLOSING, ERROR_STATE.</p>
+
+        <p><strong>Certificate Processing (8 states):</strong> CERT_CHAIN_PARSING, CERT_CHAIN_VALIDATION, TRUST_ANCHOR_CHECK, PATH_BUILDING, PATH_VALIDATION, SIGNATURE_VERIFICATION, EXTENSION_PROCESSING, POLICY_CONSTRAINT_CHECK.</p>
+
+        <p>Each involves ASN.1 DER parsing (complex, unbounded structure), cryptographic verification, chain building, and policy evaluation.</p>
+
+        <p><strong>Revocation Checks (9 states):</strong> REVOCATION_CHECK_REQUIRED, OCSP_LOOKUP_INIT, OCSP_REQUEST_SENT, OCSP_RESPONSE_RECEIVED, OCSP_RESPONSE_VALIDATION, CRL_FALLBACK_INIT, CRL_DOWNLOAD_IN_PROGRESS, CRL_PARSING, CRL_ENTRY_CHECK.</p>
+
+        <p><strong>Error States (40 states):</strong> For each operation that can fail, you need error handling. OCSP lookup: 5 error states (timeout, network error, parse error, validation error, policy decision). CRL download: 5 error states. Certificate parsing: 5 error states per cert (chain of 3 = 15). Signature verification: 5 error states per cert (3 = 15).</p>
+
+        <p><strong>Retry Logic (8 states):</strong> RETRY_ATTEMPT_1, RETRY_ATTEMPT_2, RETRY_ATTEMPT_3, RETRY_EXHAUSTED for OCSP and CRL operations.</p>
+
+        <h3>The Certification Math</h3>
+
+        <p>For DO-178C DAL B/C certification, <strong>each state requires:</strong></p>
+
+        <ol>
+            <li><strong>Formal Specification</strong> (2 person-days per state) - Entry conditions, exit conditions, invariants, valid transitions</li>
+            <li><strong>Test Coverage - MC/DC</strong> (3 person-days per state) - Modified Condition/Decision Coverage for each transition, minimum 3-5 test cases per state</li>
+            <li><strong>Timing Analysis</strong> (1 person-day per state) - WCET, BCET, average-case analysis</li>
+            <li><strong>Failure Mode Analysis - FMEA</strong> (1 person-day per state) - What happens when entered unexpectedly, timeout behavior, downstream effects</li>
+        </ol>
+
+        <div class="stat-box">
+            <div>532</div>
+            <div class="stat-label">person-days (76 states × 7 days)</div>
+        </div>
+
+        <p>That's <strong>107 person-weeks</strong> or <strong>>2 person-years</strong> just for the security state machine.</p>
+
+        <p>And we haven't included:</p>
+        <ul>
+            <li>The ASN.1 parser (~5,000 lines of complex code)</li>
+            <li>Cryptographic library verification</li>
+            <li>Memory safety analysis</li>
+            <li>Side-channel analysis</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Realistic total: 3-4 person-years of certification effort</strong> for the security components alone.
+        </div>
+
+        <h2>The Operational Nightmare</h2>
+
+        <p>You've somehow certified your PKI + TLS architecture. Now you need to operate it.</p>
+
+        <h3>Scenario 1: Certificate Expiry at Remote Maintenance Facility</h3>
+
+        <div class="callout">
+            <p><strong>Location:</strong> Remote maintenance facility, 200 miles from headquarters<br>
+            <strong>Time:</strong> 6:00 AM<br>
+            <strong>Situation:</strong> aircraft requires maintenance before next scheduled flight</p>
+        </div>
+
+        <pre>Technician: [connects maintenance laptop]
+
+System: Certificate validation failed
+        Certificate expired at 2024-12-31 23:59:59 UTC
+        Current system time: 2025-01-01 00:03:42 UTC
+
+Technician: [calls operations center]
+"I need a new certificate."
+
+Operations: "IT Security doesn't open until 9 AM.
+            Can you wait 3 hours?"
+
+Technician: "We have flights scheduled starting at 7 AM.
+            This is a $50,000/hour delay."
+
+Operations: "Can you use the emergency override?"
+
+Technician: "That requires SVP approval and creates
+            an audit exception. Last time we did that,
+            we got flagged in the FAA review."</pre>
+
+        <p><strong>The question:</strong> Why did a certificate administrative detail ground an aircraft?</p>
+
+        <p><strong>The deeper question:</strong> Why does your security architecture create operational decisions that affect flight safety?</p>
+
+        <h3>Scenario 2: OCSP Responder Outage</h3>
+
+        <p><strong>Location:</strong> Any maintenance facility<br>
+        <strong>Situation:</strong> OCSP responder is down for maintenance or experiencing outage</p>
+
+        <pre>Ground system attempting authentication...
+
+[10:00:00] Sending OCSP request
+[10:00:05] No response from OCSP responder
+[10:00:10] Retry 1...
+[10:00:15] No response
+[10:00:20] Retry 2...
+[10:00:25] No response
+[10:00:30] Retry 3...
+[10:00:35] OCSP timeout - Now what?
+
+Policy Decision Required:
+[ ] Hard-fail: Block all maintenance fleet-wide
+[ ] Soft-fail: Proceed without revocation check
+[ ] Cached: Use stale revocation status (48h old)
+[ ] Override: Require supervisor approval each op</pre>
+
+        <p><strong>Impact by option:</strong></p>
+        <ul>
+            <li><strong>Hard-fail:</strong> Fleet-wide operational disruption</li>
+            <li><strong>Soft-fail:</strong> Security policy violation</li>
+            <li><strong>Cached:</strong> Stale data, potential compromise acceptance</li>
+            <li><strong>Override:</strong> Procedural overhead, audit burden</li>
+        </ul>
+
+        <p>You've created a <strong>single point of failure</strong> in infrastructure you don't control.</p>
+
+        <h2>The Alternative: Constrained PKI + Symmetric Runtime</h2>
+
+        <p>The fix isn't "no PKI." It's <strong>"PKI in the right place."</strong></p>
+
+        <h3>The Principle</h3>
+
+        <p><strong>Use PKI where it belongs:</strong> Identity establishment, provenance, offline trust binding</p>
+
+        <p><strong>Use symmetric operations where they belong:</strong> Runtime authentication, data protection, operational security</p>
+
+        <p><strong>Never mix the two concerns.</strong></p>
+
+        <h3>Architecture Overview</h3>
+
+        <div class="comparison">
+            <div class="comparison-card">
+                <h4>🏭 Provisioning Phase (Factory/MRO)</h4>
+                <p style="margin-bottom: 16px;">This is where PKI lives</p>
+                <ul style="list-style: disc; padding-left: 20px;">
+                    <li>Root CA (air-gapped, HSM-backed)</li>
+                    <li>X.509 certificates for identity establishment</li>
+                    <li>Key derivation using HKDF</li>
+                    <li>Device identity keys (K_A_ID, K_G_ID)</li>
+                    <li>Pairwise authorization keys (K_AG)</li>
+                    <li>TPM/SE key injection (non-exportable)</li>
+                    <li>Full audit trail</li>
+                    <li>Time: not critical (hours acceptable)</li>
+                </ul>
+            </div>
+            <div class="comparison-card">
+                <h4>⚡ Runtime Phase (Operations)</h4>
+                <p style="margin-bottom: 16px;">This is PKI-free territory</p>
+                <ul style="list-style: disc; padding-left: 20px;">
+                    <li>Symmetric operations only</li>
+                    <li>HMAC challenge-response auth</li>
+                    <li>No certificate handling</li>
+                    <li>No OCSP/CRL checks</li>
+                    <li>No time dependencies</li>
+                    <li>Bounded execution (&lt;1 second)</li>
+                    <li>5 states, fully deterministic</li>
+                    <li>Time: critical (≤15 seconds total)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Provisioning Phase Detail</h3>
+
+        <p><strong>Location:</strong> Factory or authorized MRO facility<br>
+        <strong>Frequency:</strong> Once per device (+ occasional key rotation)<br>
+        <strong>Network:</strong> Controlled, air-gapped provisioning network</p>
+
+        <pre>// Factory provisioning (conceptual)
+class SecureProvisioner {
+    provision_aircraft(aircraft_sn, aircraft_tpm) {
+        // Derive device identity key
+        k_a_id = HKDF(
+            master: this.root_key,
+            salt: aircraft_sn,
+            info: "aircraft-device-identity",
+            length: 32  // 256 bits
+        )
+        
+        // Inject into TPM (hardware-backed, non-exportable)
+        aircraft_tpm.import_key(
+            key_id: "K_A_ID",
+            key_material: k_a_id,
+            attributes: {
+                exportable: false,
+                usage: ["sign", "verify"],
+                algorithm: "HMAC-SHA256"
+            }
+        )
+        
+        // Audit
+        audit_log.record({
+            event: "AIRCRAFT_PROVISIONED",
+            aircraft_sn: aircraft_sn,
+            key_id: "K_A_ID",
+            timestamp: utc_now(),
+            technician: current_user()
+        })
+    }
+    
+    authorize_ground_tool(aircraft_sn, ground_id, 
+                         aircraft_tpm, ground_tpm) {
+        // Derive pairwise authorization key
+        k_ag = HKDF(
+            master: this.root_key,
+            salt: aircraft_sn + ground_id,
+            info: "pairwise-authorization",
+            length: 32
+        )
+        
+        // Install on both sides
+        aircraft_tpm.import_key(
+            key_id: f"K_AG_{ground_id}",
+            key_material: k_ag,
+            attributes: {exportable: false}
+        )
+        
+        ground_tpm.import_key(
+            key_id: f"K_AG_{aircraft_sn}",
+            key_material: k_ag,
+            attributes: {exportable: false}
+        )
+        
+        // Audit
+        audit_log.record({
+            event: "AUTHORIZATION_CREATED",
+            aircraft_sn: aircraft_sn,
+            ground_id: ground_id,
+            key_id: "K_AG",
+            timestamp: utc_now(),
+            technician: current_user()
+        })
+    }
+}</pre>
+
+        <p><strong>Key properties:</strong></p>
+        <ul>
+            <li>Root key never leaves HSM</li>
+            <li>Device keys are unique (derived, not copied)</li>
+            <li>Authorization keys are scoped (Aircraft × Ground, not fleet-wide)</li>
+            <li>Everything is audited (who, what, when, where)</li>
+            <li>Operates offline (no network dependencies)</li>
+        </ul>
+
+        <h3>Runtime Phase Detail</h3>
+
+        <p><strong>Location:</strong> Hangar, maintenance facility<br>
+        <strong>Frequency:</strong> Every maintenance connection<br>
+        <strong>Network:</strong> Local only (no internet required)</p>
+
+        <pre>// Runtime authentication (conceptual)
+class RuntimeAuthenticator {
+    authenticate() {
+        start = time.monotonic()
+        
+        // State 1: IDLE → CHALLENGE_SENT
+        this.state = AuthState.CHALLENGE_SENT
+        nonce_local = random_bytes(32)
+        this.send(Challenge(nonce: nonce_local))
+        
+        // State 2: CHALLENGE_SENT → RESPONSE_RECEIVED
+        response = this.receive(timeout: 2.0)
+        if response == null:
+            this.abort(AuthError.TIMEOUT, "No response")
+        
+        nonce_remote = response.nonce
+        response_hmac = response.hmac
+        
+        // Verify peer's response
+        expected_hmac = this.tpm.compute_hmac(
+            key_id: f"K_AG_{this.peer_id}",
+            message: nonce_local + nonce_remote + "peer-auth"
+        )
+        
+        if not constant_time_compare(response_hmac, expected_hmac):
+            this.abort(AuthError.INVALID_HMAC, "Verification failed")
+        
+        this.state = AuthState.RESPONSE_RECEIVED
+        
+        // Send confirmation
+        confirm_hmac = this.tpm.compute_hmac(
+            key_id: f"K_AG_{this.peer_id}",
+            message: nonce_remote + nonce_local + "local-auth"
+        )
+        this.send(Confirm(hmac: confirm_hmac))
+        
+        // State 3: AUTHENTICATED
+        this.state = AuthState.AUTHENTICATED
+        
+        // Derive session key
+        session_key = HKDF(
+            master: this.tpm.get_key(f"K_AG_{this.peer_id}"),
+            salt: nonce_local + nonce_remote,
+            info: "session-key-v1",
+            length: 32
+        )
+        
+        elapsed = time.monotonic() - start
+        assert elapsed < 1.0  // Bounded execution
+        
+        return session_key
+    }
+    
+    abort(error_type, message) {
+        this.state = error_type == TIMEOUT ? 
+            AuthState.TIMEOUT : AuthState.AUTH_FAILURE
+        
+        // Log with full context
+        log_event({
+            event: "AUTH_FAILURE",
+            error_type: error_type.name,
+            message: message,
+            peer_id: this.peer_id,
+            state: this.state.name,
+            timestamp: utc_now()
+        })
+        
+        // Deterministic: abort, log, require manual retry
+        raise AuthenticationError(error_type, message)
+    }
+}</pre>
+
+        <p><strong>Key properties:</strong></p>
+        <ul>
+            <li>Bounded execution time (&lt;1 second)</li>
+            <li>Explicit states (5 total, not 76)</li>
+            <li>Deterministic failure (no "it depends")</li>
+            <li>No external dependencies</li>
+            <li>Auditable behavior (every failure logged)</li>
+        </ul>
+
+        <h2>Comparison: The Numbers</h2>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">PKI + TLS Everywhere</p>
+            <div class="visual-bar" style="width: 100%;">
+                140 person-weeks
+            </div>
+        </div>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Constrained PKI + Symmetric Runtime</p>
+            <div class="visual-bar good" style="width: 13%;">
+                18 person-weeks
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <strong>Same security properties.</strong> Mutual authentication, confidentiality, integrity, replay protection, forward secrecy—all preserved.<br><br>
+            <strong>8× less certification effort.</strong> Deterministic behavior. No operational dependencies.
+        </div>
+
+        <h3>Security Properties Preserved</h3>
+
+        <p>A critical question: <strong>"Does the symmetric approach maintain the same security properties?"</strong></p>
+
+        <p><strong>Yes. Here's the proof:</strong></p>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #E2E8F0; margin: 32px 0; font-size: 16px;">
+            <p style="margin-bottom: 12px;"><strong>Mutual Authentication:</strong><br>
+            TLS: X.509 certificate exchange<br>
+            Symmetric: HMAC challenge-response with K_AG<br>
+            <span style="color: #38A169;">✓ Both parties prove possession of secret</span></p>
+
+            <p style="margin-bottom: 12px;"><strong>Confidentiality:</strong><br>
+            TLS: AES-GCM-256<br>
+            Symmetric: AES-GCM-256<br>
+            <span style="color: #38A169;">✓ Same cipher</span></p>
+
+            <p style="margin-bottom: 12px;"><strong>Integrity:</strong><br>
+            TLS: AEAD tag<br>
+            Symmetric: AEAD tag or CMAC<br>
+            <span style="color: #38A169;">✓ Same strength</span></p>
+
+            <p style="margin-bottom: 12px;"><strong>Replay Protection:</strong><br>
+            TLS: Sequence numbers<br>
+            Symmetric: Monotonic counters<br>
+            <span style="color: #38A169;">✓ Same mechanism</span></p>
+
+            <p style="margin-bottom: 0;"><strong>Forward Secrecy:</strong><br>
+            TLS: Ephemeral DH<br>
+            Symmetric: Nonce-derived session keys<br>
+            <span style="color: #38A169;">✓ Past sessions not compromised</span></p>
+        </div>
+
+        <p><strong>The difference is not security strength. It's operational characteristics:</strong></p>
+
+        <ul>
+            <li>TLS: Strong security + non-determinism + external dependencies</li>
+            <li>Symmetric: Strong security + determinism + no dependencies</li>
+        </ul>
+
+        <h2>When PKI + TLS Actually Makes Sense</h2>
+
+        <p>To be fair: there ARE contexts where full PKI + TLS is the right choice.</p>
+
+        <p><strong>Use PKI + TLS everywhere when:</strong></p>
+
+        <ol>
+            <li><strong>Dynamic trust establishment required</strong> - Need to authenticate previously unknown parties, cannot pre-provision authorization (Example: Public-facing web services)</li>
+            <li><strong>Regulatory compliance mandates it</strong> - Industry standards require TLS specifically, certification body requires X.509 mutual TLS (Example: Payment card processing)</li>
+            <li><strong>Scale exceeds provisioning feasibility</strong> - Millions of endpoints without controlled provisioning, endpoint identity unknown at manufacturing (Example: Consumer IoT)</li>
+            <li><strong>Environment supports runtime dependencies</strong> - Reliable connectivity available, time synchronization robust, OCSP/CRL infrastructure mature (Example: Cloud-to-cloud)</li>
+        </ol>
+
+        <p><strong>Don't use PKI + TLS everywhere when:</strong></p>
+
+        <ol>
+            <li><strong>Endpoints provisioned under controlled conditions</strong> - Factory provisioning feasible, authorization relationships known in advance (Example: Aircraft and authorized ground equipment)</li>
+            <li><strong>Determinism is certification requirement</strong> - DO-178C/DO-326A compliance needed, safety-critical failure modes must be bounded (Example: Avionics, automotive, medical)</li>
+            <li><strong>Environment is connectivity-constrained</strong> - Remote locations with intermittent connectivity, cannot depend on external infrastructure (Example: Remote maintenance facilities)</li>
+            <li><strong>Performance is safety-critical</strong> - Authentication must complete in bounded time, timeouts affect operational availability (Example: Time-critical maintenance)</li>
+        </ol>
+
+        <h2>Conclusion: Match Tools to Constraints</h2>
+
+        <p>The title of this article is "PKI Everywhere Is an Architectural Smell."</p>
+
+        <p>Not "PKI Is Bad."</p>
+
+        <p>The smell is in <strong>applying enterprise patterns without adaptation.</strong></p>
+
+        <p>When you take a tool designed for cloud-scale distributed systems, dynamic trust, best-effort availability, and graceful degradation—and force it into resource-constrained embedded systems with pre-established trust, hard real-time requirements, and deterministic failure—you get:</p>
+
+        <ul>
+            <li>Certification nightmares (unbounded state machines)</li>
+            <li>Operational fragility (external dependencies)</li>
+            <li>Schedule delays (months to years)</li>
+            <li>Cost overruns (millions of dollars)</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>The fix is not "avoid PKI." The fix is "use PKI correctly."</strong>
+        </div>
+
+        <p><strong>Use PKI where it excels:</strong></p>
+        <ul>
+            <li>Identity establishment (offline, controlled)</li>
+            <li>Provenance verification (software signing)</li>
+            <li>Trust anchoring (root of trust)</li>
+        </ul>
+
+        <p><strong>Use symmetric operations where they excel:</strong></p>
+        <ul>
+            <li>Runtime authentication (bounded, deterministic)</li>
+            <li>Data protection (low overhead, certifiable)</li>
+            <li>Operational security (no external dependencies)</li>
+        </ul>
+
+        <p><strong>Stop trying to certify the internet. Build systems that survive certification.</strong></p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 2 - TLS Is Not a Runtime Primitive<br>
+            Why stream-oriented security protocols don't belong in bounded, certifiable systems. We'll dive deep into the specific mismatch between TLS (designed for streams) and embedded transports (designed for messages), with detailed analysis of TLS over CAN.</p>
+            
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+    </div>
+</body>
+</html>
