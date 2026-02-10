@@ -13,10 +13,73 @@
             background: #fff;
             font-size: 20px;
         }
-        .container {
-            max-width: 680px;
+        .page-wrapper {
+            max-width: 1400px;
             margin: 0 auto;
+            display: flex;
+            gap: 60px;
             padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover {
+            color: #444;
+        }
+        .toc-link.toc-h3.active {
+            color: #667eea;
+        }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
         }
         .series-tag {
             font-size: 14px;
@@ -241,11 +304,90 @@
             h1 { font-size: 32px; }
             h2 { font-size: 24px; }
             .comparison { grid-template-columns: 1fr; }
+            .page-wrapper {
+                flex-direction: column;
+                gap: 0;
+                padding: 20px;
+            }
+            .toc-sidebar {
+                display: none;
+            }
+            .container {
+                max-width: 100%;
+            }
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate TOC from headings
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            
+            // Add IDs to headings and build TOC
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Update URL without jumping
+                    history.pushState(null, null, '#' + id);
+                });
+                
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            
+            // Highlight current section on scroll
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                
+                headings.forEach(heading => {
+                    const sectionTop = heading.offsetTop;
+                    if (scrollPosition >= sectionTop) {
+                        current = heading.id;
+                    }
+                });
+                
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC(); // Initial highlight
+        });
+    </script>
 </head>
 <body>
-    <div class="container">
+    <div class="page-wrapper">
+        <!-- Table of Contents Sidebar -->
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list">
+                    <!-- TOC items will be generated by JavaScript -->
+                </ul>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <div class="container">
         <div class="hero">
             <div class="series-tag">Security That Survives Certification • Article 1 of 8</div>
             <h1>PKI Everywhere Is an Architectural Smell</h1>
@@ -258,7 +400,7 @@
 
         <p>It checks every box for "modern cybersecurity."</p>
 
-        <p>There's <strong>one problem: it'll never survive certification.</strong></p>
+        <p>There's <strong>one problem: as-is, it'll almost certainly fail to survive certification.</strong></p>
 
         <p>Not because PKI is fundamentally flawed. But because applying enterprise security patterns without adaptation creates unbounded state machines, runtime dependencies that collapse operational reliability, and non-deterministic behavior that conflicts with safety requirements.</p>
 
@@ -290,7 +432,7 @@
                     <li>Fixed resources (no elastic scaling)</li>
                     <li>Deterministic behavior required</li>
                     <li>No retry ambiguity</li>
-                    <li>Hard failures only</li>
+                    <li>Explicit, deterministic failure modes</li>
                 </ul>
             </div>
         </div>
@@ -370,6 +512,10 @@
         <p><strong>Error States (40 states):</strong> For each operation that can fail, you need error handling. OCSP lookup: 5 error states (timeout, network error, parse error, validation error, policy decision). CRL download: 5 error states. Certificate parsing: 5 error states per cert (chain of 3 = 15). Signature verification: 5 error states per cert (3 = 15).</p>
 
         <p><strong>Retry Logic (8 states):</strong> RETRY_ATTEMPT_1, RETRY_ATTEMPT_2, RETRY_ATTEMPT_3, RETRY_EXHAUSTED for OCSP and CRL operations.</p>
+
+        <div class="callout callout-warning">
+            <strong>Note on quantitative estimates:</strong> The state counts and person-week figures presented here are conservative engineering estimates based on typical DO-178C/DO-326A certification practice. They are not normative or mandated by regulation, but reflect observed certification effort in comparable systems.
+        </div>
 
         <h3>The Certification Math</h3>
 
@@ -735,7 +881,8 @@ class RuntimeAuthenticator {
             <p style="margin-bottom: 0;"><strong>Forward Secrecy:</strong><br>
             TLS: Ephemeral DH<br>
             Symmetric: Nonce-derived session keys<br>
-            <span style="color: #38A169;">✓ Past sessions not compromised</span></p>
+            <span style="color: #38A169;">✓ Past sessions not compromised</span><br>
+            <span style="font-size: 14px; color: #718096; font-style: italic;">(Operational forward secrecy, contingent on hardware-protected long-term keys with non-exportability and periodic rotation)</span></p>
         </div>
 
         <p><strong>The difference is not security strength. It's operational characteristics:</strong></p>
@@ -810,6 +957,7 @@ class RuntimeAuthenticator {
             
             <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
         </div>
-    </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
 </body>
 </html>
