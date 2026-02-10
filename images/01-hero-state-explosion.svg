@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Title -->
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    PKI Everywhere Is an Architectural Smell
+  </text>
+  <text x="600" y="95" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    State Machine Explosion: 5 states → 76+ states
+  </text>
+
+  <!-- Left side: Simple Authentication (5 states) -->
+  <g id="simple-auth">
+    <text x="200" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      Simple Symmetric Auth
+    </text>
+    <text x="200" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      5 states, deterministic
+    </text>
+
+    <!-- State circles for simple auth -->
+    <circle cx="200" cy="220" r="25" fill="#38A169" stroke="white" stroke-width="3"/>
+    <text x="200" y="227" font-family="monospace" font-size="12" fill="white" text-anchor="middle" font-weight="bold">IDLE</text>
+
+    <circle cx="120" cy="300" r="25" fill="#38A169" stroke="white" stroke-width="3"/>
+    <text x="120" y="307" font-family="monospace" font-size="11" fill="white" text-anchor="middle" font-weight="bold">SEND</text>
+
+    <circle cx="280" cy="300" r="25" fill="#38A169" stroke="white" stroke-width="3"/>
+    <text x="280" y="307" font-family="monospace" font-size="11" fill="white" text-anchor="middle" font-weight="bold">RECV</text>
+
+    <circle cx="120" cy="380" r="25" fill="#38A169" stroke="white" stroke-width="3"/>
+    <text x="120" y="387" font-family="monospace" font-size="11" fill="white" text-anchor="middle" font-weight="bold">VERIFY</text>
+
+    <circle cx="280" cy="380" r="25" fill="#38A169" stroke="white" stroke-width="3"/>
+    <text x="280" y="387" font-family="monospace" font-size="10" fill="white" text-anchor="middle" font-weight="bold">AUTHED</text>
+
+    <!-- Connections -->
+    <line x1="200" y1="245" x2="135" y2="280" stroke="white" stroke-width="2" opacity="0.7"/>
+    <line x1="200" y1="245" x2="265" y2="280" stroke="white" stroke-width="2" opacity="0.7"/>
+    <line x1="120" y1="325" x2="120" y2="355" stroke="white" stroke-width="2" opacity="0.7"/>
+    <line x1="280" y1="325" x2="280" y2="355" stroke="white" stroke-width="2" opacity="0.7"/>
+    <line x1="145" y1="380" x2="255" y2="380" stroke="white" stroke-width="2" opacity="0.7"/>
+
+    <!-- Stats box -->
+    <rect x="110" y="430" width="180" height="60" rx="8" fill="rgba(56, 161, 105, 0.3)" stroke="#38A169" stroke-width="2"/>
+    <text x="200" y="455" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+      5 states total
+    </text>
+    <text x="200" y="477" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ~2 weeks incremental effort
+    </text>
+  </g>
+
+  <!-- Arrow pointing right -->
+  <g id="comparison-arrow">
+    <path d="M 380 350 L 480 350" stroke="white" stroke-width="4" fill="none" opacity="0.8"/>
+    <path d="M 460 335 L 480 350 L 460 365" fill="white" opacity="0.8"/>
+    <text x="430" y="330" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">vs</text>
+  </g>
+
+  <!-- Right side: PKI/TLS Explosion (76+ states) -->
+  <g id="pki-explosion">
+    <text x="850" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      PKI + TLS Runtime
+    </text>
+    <text x="850" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      76+ states, operationally non-deterministic
+    </text>
+
+    <!-- Create a visual "explosion" of many small nodes -->
+    <!-- Central hub -->
+    <circle cx="850" cy="310" r="15" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    
+    <!-- Ring 1: Inner nodes (12 nodes) -->
+    <circle cx="850" cy="220" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="920" cy="240" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="950" cy="280" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="950" cy="340" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="920" cy="380" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="850" cy="400" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="780" cy="380" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="750" cy="340" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="750" cy="280" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="780" cy="240" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="820" cy="210" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="880" cy="210" r="8" fill="#FC8181" stroke="white" stroke-width="1.5" opacity="0.9"/>
+
+    <!-- Ring 2: Outer nodes (24 nodes - selection) -->
+    <circle cx="850" cy="180" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="960" cy="210" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="990" cy="260" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="1000" cy="310" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="990" cy="360" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="960" cy="410" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="880" cy="440" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="820" cy="440" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="740" cy="410" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="710" cy="360" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="700" cy="310" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="710" cy="260" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="740" cy="210" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="800" cy="180" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="900" cy="180" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="975" cy="235" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="985" cy="285" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="985" cy="335" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="975" cy="385" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="850" cy="430" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="725" cy="385" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="715" cy="335" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="715" cy="285" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+    <circle cx="725" cy="235" r="6" fill="#FEB2B2" stroke="white" stroke-width="1" opacity="0.8"/>
+
+    <!-- Scattered outer nodes (representing the chaos) -->
+    <circle cx="1020" cy="230" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="1030" cy="290" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="1030" cy="330" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="1020" cy="390" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="980" cy="450" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="850" cy="470" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="720" cy="450" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="680" cy="390" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="670" cy="330" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="670" cy="290" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="680" cy="230" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="770" cy="170" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+    <circle cx="930" cy="170" r="5" fill="#FED7D7" stroke="white" stroke-width="0.5" opacity="0.6"/>
+
+    <!-- Connection lines from center (showing complexity) -->
+    <line x1="850" y1="310" x2="850" y2="220" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="920" y2="240" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="950" y2="280" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="950" y2="340" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="920" y2="380" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="850" y2="400" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="780" y2="380" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="750" y2="340" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="750" y2="280" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="780" y2="240" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="820" y2="210" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="850" y1="310" x2="880" y2="210" stroke="white" stroke-width="1" opacity="0.4"/>
+
+    <!-- Stats box -->
+    <rect x="760" y="490" width="180" height="80" rx="8" fill="rgba(229, 62, 62, 0.3)" stroke="#E53E3E" stroke-width="2"/>
+    <text x="850" y="515" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+      76+ states
+    </text>
+    <text x="850" y="537" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ~107 person-weeks
+    </text>
+    <text x="850" y="557" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      (state machine only)
+    </text>
+  </g>
+
+  <!-- Bottom text -->
+  <text x="600" y="605" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-style="italic">
+    Article 1 of 8: Security That Survives Certification
+  </text>
+</svg>
