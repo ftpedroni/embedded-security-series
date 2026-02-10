@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLS Is Not a Runtime Primitive</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover {
+            color: #444;
+        }
+        .toc-link.toc-h3.active {
+            color: #667eea;
+        }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .comparison-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .comparison-card li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .comparison-card li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #E53E3E;
+        }
+        .comparison-card.good li:before {
+            color: #38A169;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 32px 0;
+        }
+        .stat-box > div:first-child {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .danger {
+            color: #E53E3E;
+        }
+        .success {
+            color: #38A169;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 32px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+            font-size: 16px;
+        }
+        th {
+            font-weight: 700;
+            background: #F7FAFC;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .page-wrapper {
+                flex-direction: column;
+                gap: 0;
+                padding: 20px;
+            }
+            .toc-sidebar {
+                display: none;
+            }
+            .container {
+                max-width: 100%;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate TOC from headings
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            
+            // Add IDs to headings and build TOC
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            
+            // Highlight current section on scroll
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                
+                headings.forEach(heading => {
+                    const sectionTop = heading.offsetTop;
+                    if (scrollPosition >= sectionTop) {
+                        current = heading.id;
+                    }
+                });
+                
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC(); // Initial highlight
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Table of Contents Sidebar -->
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list">
+                    <!-- TOC items will be generated by JavaScript -->
+                </ul>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 2 of 8</div>
+            <h1>TLS Is Not a Runtime Primitive</h1>
+            <div class="subtitle">Why stream-oriented security protocols don't belong in bounded, certifiable systems</div>
+        </div>
+
+        <img src="images/02-hero-stream-vs-bounded.svg" alt="Stream-Oriented vs Bounded Systems comparison diagram" class="hero-image">
+
+        <p>Your security architect presents their design: <strong>"We'll use TLS for all authentication and data protection."</strong></p>
+
+        <p>It sounds reasonable. TLS is battle-tested. It's in every browser, every server, every mobile app. Standard security practice.</p>
+
+        <p>Except <strong>TLS was never designed for your system.</strong></p>
+
+        <p>And when you force a stream-oriented protocol into a bounded, message-oriented environment, you don't get "acceptable adaptation." You get state explosion, non-deterministic behavior, and certification failure.</p>
+
+        <h2>The Fundamental Mismatch</h2>
+
+        <p>This isn't about TLS being "bad" or field buses being "limited." It's about <strong>architectural assumptions that don't translate.</strong></p>
+
+        <p>TLS assumes you're operating on a continuous byte stream—TCP, where you can send 1 byte or 100KB and the lower layers handle fragmentation, ordering, and retransmission transparently.</p>
+
+        <p>Safety-critical embedded systems don't work that way.</p>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>Stream-Oriented Protocols (TLS, SSH, DTLS)</h4>
+                <ul>
+                    <li>Continuous byte streams</li>
+                    <li>Variable message sizes (1B to 64KB+)</li>
+                    <li>Stateful connections (sessions)</li>
+                    <li>Retransmission handled below</li>
+                    <li>Variable latency acceptable</li>
+                    <li>Non-deterministic timing OK</li>
+                </ul>
+            </div>
+            <div class="comparison-card good">
+                <h4>Bounded Systems (Field Buses, Safety Protocols)</h4>
+                <ul>
+                    <li>Discrete messages (frames)</li>
+                    <li>Fixed payload sizes (4-256 bytes)</li>
+                    <li>Stateless or minimal state</li>
+                    <li>No automatic retransmission</li>
+                    <li>Bounded latency required</li>
+                    <li>Deterministic timing critical</li>
+                </ul>
+            </div>
+        </div>
+
+        <p><strong>Examples of bounded systems:</strong></p>
+        <ul>
+            <li><strong>CAN:</strong> 8-byte frames, priority arbitration, broadcast</li>
+            <li><strong>FlexRay:</strong> 254-byte frames, static schedule, dual-channel</li>
+            <li><strong>LIN:</strong> 8-byte frames, master-slave, 19.2 Kbps</li>
+            <li><strong>ARINC 429:</strong> 32-bit words, simplex, 100 Kbps</li>
+            <li><strong>MIL-STD-1553:</strong> 32-word frames, command-response, 1 Mbps</li>
+        </ul>
+
+        <p>These aren't implementation details. They're <strong>fundamental constraints</strong> that define how the system operates, how timing works, and what behaviors are certifiable.</p>
+
+        <h2>Why Forcing TLS Breaks Everything</h2>
+
+        <p>Let's walk through what happens when you try to run TLS on a bounded system.</p>
+
+        <h3>Problem 1: Message Size Explosion</h3>
+
+        <p>A minimal TLS 1.3 handshake:</p>
+
+        <pre>ClientHello:          ~512 bytes
+ServerHello:          ~128 bytes  
+EncryptedExtensions:   ~64 bytes
+Certificate:     1024-2048 bytes  (X.509 chain)
+CertificateVerify:    ~256 bytes  (signature)
+Finished:              ~64 bytes  (MAC)
+
+<strong>Total: ~2-4KB for basic handshake</strong></pre>
+
+        <p>Now map that to bounded systems:</p>
+
+        <table>
+            <tr>
+                <th>Protocol</th>
+                <th>Frame Size</th>
+                <th>Frames Needed (2KB)</th>
+                <th>Overhead Factor</th>
+            </tr>
+            <tr>
+                <td><strong>CAN</strong></td>
+                <td>8 bytes</td>
+                <td class="danger">256 frames</td>
+                <td>32×</td>
+            </tr>
+            <tr>
+                <td><strong>LIN</strong></td>
+                <td>8 bytes</td>
+                <td class="danger">256 frames</td>
+                <td>32× (+ slow bus)</td>
+            </tr>
+            <tr>
+                <td><strong>ARINC 429</strong></td>
+                <td>4 bytes (32 bits)</td>
+                <td class="danger">512 words</td>
+                <td>64×</td>
+            </tr>
+            <tr>
+                <td><strong>FlexRay</strong></td>
+                <td>254 bytes</td>
+                <td class="danger">9 frames</td>
+                <td>Moderate</td>
+            </tr>
+            <tr>
+                <td><strong>MIL-STD-1553</strong></td>
+                <td>64 bytes (32 words)</td>
+                <td class="danger">32 frames</td>
+                <td>16×</td>
+            </tr>
+        </table>
+
+        <p><strong>Result:</strong> A single TLS handshake fragments into dozens or hundreds of bounded messages.</p>
+
+        <h3>Problem 2: Fragmentation Infrastructure</h3>
+
+        <p>None of these protocols have built-in fragmentation. <strong>You have to build it.</strong></p>
+
+        <p><strong>What that means:</strong></p>
+
+        <pre>// Fragmentation layer you must implement
+struct Fragment {
+    uint8_t  sequence_num;    // Which fragment is this?
+    uint8_t  total_fragments; // How many total?
+    uint16_t session_id;      // Which transfer?
+    uint8_t  data[N];         // Actual payload
+    uint16_t checksum;        // Per-fragment integrity
+}
+
+// State machine you must implement
+enum FragmentState {
+    FRAG_IDLE,
+    FRAG_RECEIVING,
+    FRAG_WAITING_TIMEOUT,
+    FRAG_RETRY,
+    FRAG_COMPLETE,
+    FRAG_FAILED
+}
+
+// Buffer management you must implement  
+struct ReassemblyBuffer {
+    uint8_t  buffer[4096];       // Hold partial transfer
+    uint16_t bytes_received;
+    uint16_t bytes_expected;
+    uint32_t last_fragment_time;
+    bitmap_t received_fragments;  // Track which arrived
+}</pre>
+
+        <p><strong>You've just added:</strong></p>
+        <ol>
+            <li><strong>Sequence tracking:</strong> Know which fragments arrived</li>
+            <li><strong>Buffering:</strong> 2-4KB RAM per active transfer</li>
+            <li><strong>Timeout handling:</strong> Detect missing fragments</li>
+            <li><strong>Retry logic:</strong> Selective or full retransmission?</li>
+            <li><strong>Reordering:</strong> Frames can arrive out of sequence</li>
+            <li><strong>Partial failure recovery:</strong> What if 95% arrives then times out?</li>
+        </ol>
+
+        <div class="callout callout-danger">
+            <strong>Every decision is a certification requirement.</strong> Every error path must be tested. Every timeout must be bounded and proven.
+        </div>
+
+        <h3>Problem 3: State Explosion</h3>
+
+        <p><strong>Baseline TLS state machine:</strong> ~20 states (from Article #1)</p>
+
+        <p><strong>Add fragmentation for N fragments:</strong></p>
+
+        <div class="stat-box">
+            <div>4×N</div>
+            <div class="stat-label">additional states per fragment (PENDING, RECEIVED, TIMEOUT, RETRY)</div>
+        </div>
+
+        <p><strong>Concrete examples:</strong></p>
+
+        <table>
+            <tr>
+                <th>Protocol</th>
+                <th>Fragments</th>
+                <th>Fragmentation States</th>
+                <th>Total States</th>
+            </tr>
+            <tr>
+                <td>CAN (8B)</td>
+                <td>256</td>
+                <td class="danger">1,024</td>
+                <td class="danger"><strong>1,044</strong></td>
+            </tr>
+            <tr>
+                <td>LIN (8B)</td>
+                <td>256</td>
+                <td class="danger">1,024</td>
+                <td class="danger"><strong>1,044</strong></td>
+            </tr>
+            <tr>
+                <td>ARINC 429 (4B)</td>
+                <td>512</td>
+                <td class="danger">2,048</td>
+                <td class="danger"><strong>2,068</strong></td>
+            </tr>
+            <tr>
+                <td>FlexRay (254B)</td>
+                <td>9</td>
+                <td class="success">36</td>
+                <td class="success"><strong>56</strong></td>
+            </tr>
+            <tr>
+                <td>MIL-STD-1553 (64B)</td>
+                <td>32</td>
+                <td class="danger">128</td>
+                <td class="danger"><strong>148</strong></td>
+            </tr>
+        </table>
+
+        <p>This is <strong>conservative</strong>—doesn't include:</p>
+        <ul>
+            <li>Error recovery states (corrupt fragments)</li>
+            <li>Buffer management states (allocation, overflow)</li>
+            <li>Reordering states (out-of-sequence handling)</li>
+            <li>Session management states (multiple concurrent transfers)</li>
+        </ul>
+
+        <p><strong>Realistic total:</strong> 1,500-3,000+ states for small-frame buses.</p>
+
+        <div class="callout callout-warning">
+            <strong>Remember Article #1?</strong> We went from 5 states (simple HMAC) to 76 states (PKI + TLS). Now we're at <strong>1,000+ states</strong> (TLS + fragmentation).
+        </div>
+
+        <h3>Problem 4: Non-Deterministic Timing</h3>
+
+        <p>Bounded systems require <strong>deterministic worst-case timing.</strong> Fragmentation destroys that.</p>
+
+        <p><strong>Sources of timing variability:</strong></p>
+
+        <ol>
+            <li><strong>Fragment transmission:</strong> Depends on bus priority, arbitration, current load</li>
+            <li><strong>Fragment loss:</strong> Requires timeout detection + retransmission</li>
+            <li><strong>Reordering:</strong> Must wait for gaps to be filled</li>
+            <li><strong>Buffer management:</strong> Allocation, reassembly, validation</li>
+            <li><strong>Error recovery:</strong> Retry attempts, exponential backoff</li>
+        </ol>
+
+        <p><strong>Example: CAN at 500 Kbps</strong></p>
+
+        <pre>Best case (ideal conditions):
+- 256 frames × 0.22ms = 56ms
+- No contention, no losses, sequential order
+
+Typical case (realistic):
+- Bus 50% loaded
+- Occasional arbitration delays
+- 1-2% frame loss rate
+- Result: 200-400ms
+
+Worst case (certification requirement):
+- Bus 80% loaded
+- Low priority messages
+- 5% frame loss with retries
+- Out-of-order arrival
+- Result: 1-2 seconds</pre>
+
+        <div class="callout callout-danger">
+            <strong>Certification doesn't care about "typical."</strong> You must prove worst-case bounds—and with fragmentation, those bounds are <strong>orders of magnitude</strong> worse than native operations.
+        </div>
+
+        <h2>The Certification Nightmare</h2>
+
+        <p>Now let's talk about getting this certified.</p>
+
+        <h3>Test Case Explosion</h3>
+
+        <p><strong>DO-178C Modified Condition/Decision Coverage (MC/DC) requires testing:</strong></p>
+
+        <pre>// Just a sample of fragmentation test scenarios
+test_all_fragments_arrive_in_order()
+test_fragments_arrive_out_of_order()  
+test_single_fragment_missing()
+test_multiple_fragments_missing()
+test_first_fragment_missing()
+test_last_fragment_missing()
+test_timeout_early_in_transfer()
+test_timeout_late_in_transfer()
+test_partial_retransmit_success()
+test_partial_retransmit_failure()
+test_full_retransmit_success()
+test_full_retransmit_failure()
+test_buffer_overflow()
+test_buffer_exhaustion()
+test_duplicate_fragment()
+test_corrupt_fragment()
+test_wrong_sequence_number()
+test_wrong_session_id()
+test_concurrent_transfers()
+test_interleaved_transfers()
+// ... 100+ more scenarios</pre>
+
+        <p><strong>For each test:</strong></p>
+        <ul>
+            <li>Define expected behavior (requirement trace)</li>
+            <li>Write test procedure</li>
+            <li>Set up test environment (inject faults, control timing)</li>
+            <li>Execute test</li>
+            <li>Verify all conditions (MC/DC coverage)</li>
+            <li>Document in test report</li>
+            <li>Trace to requirements</li>
+            <li>Trace to FMEA</li>
+        </ul>
+
+        <div class="stat-box">
+            <div>120+</div>
+            <div class="stat-label">person-weeks for fragmentation testing alone (DAL B/C)</div>
+        </div>
+
+        <h3>FMEA Complexity</h3>
+
+        <p><strong>Failure Mode and Effects Analysis must answer:</strong></p>
+
+        <ol>
+            <li>What happens when fragment N/256 times out?</li>
+            <li>Is the partial buffer discarded or retained?</li>
+            <li>How long do we wait before declaring failure?</li>
+            <li>Do we retry from fragment 0 or from last received?</li>
+            <li>What's the maximum number of retries?</li>
+            <li>What happens when all retries exhausted?</li>
+            <li>Is the failure logged? Where? How?</li>
+            <li>What's the system state after failure?</li>
+            <li>Can we recover without restart?</li>
+            <li>What's the impact on other operations?</li>
+            <li>Can this be exploited (security FMEA)?</li>
+        </ol>
+
+        <p><strong>Each question spawns more questions. Each answer must be:</strong></p>
+        <ul>
+            <li>Documented in requirements</li>
+            <li>Implemented in code</li>
+            <li>Traced to tests</li>
+            <li>Verified in review</li>
+            <li>Analyzed for failure modes</li>
+        </ul>
+
+        <h2>The Alternative: Message-Native Security</h2>
+
+        <p>The solution isn't "make TLS work on bounded systems." The solution is <strong>design security for bounded systems.</strong></p>
+
+        <h3>Per-Message Authentication</h3>
+
+        <pre>// CAN-native HMAC (8-byte frame)
+struct SecureCANFrame {
+    uint32_t can_id;           // Standard CAN identifier
+    uint8_t  data[4];          // 4 bytes payload
+    uint32_t hmac_tag;         // 4 bytes MAC (truncated)
+}
+
+// Send authenticated message
+send_secure_frame(can_id, payload) {
+    tag = HMAC_SHA256(K_shared, can_id || payload)
+    truncated_tag = tag[0:4]  // First 4 bytes
+    
+    transmit_can_frame(can_id, payload || truncated_tag)
+}
+
+// Receive and verify
+receive_secure_frame() {
+    frame = receive_can_frame()
+    
+    payload = frame.data[0:4]
+    received_tag = frame.data[4:8]
+    
+    expected_tag = HMAC_SHA256(K_shared, frame.id || payload)[0:4]
+    
+    if (constant_time_compare(received_tag, expected_tag)) {
+        return payload  // Authenticated
+    } else {
+        return ERROR    // Authentication failed
+    }
+}</pre>
+
+        <p><strong>Key properties:</strong></p>
+        <ul>
+            <li><strong>No fragmentation:</strong> Fits in single frame</li>
+            <li><strong>Deterministic:</strong> Fixed computation time (~0.88ms)</li>
+            <li><strong>Stateless:</strong> No session state to manage</li>
+            <li><strong>Simple state machine:</strong> 5 states total</li>
+            <li><strong>Certifiable:</strong> Bounded worst-case behavior</li>
+        </ul>
+
+        <h3>Comparison: TLS vs Message-Native</h3>
+
+        <table>
+            <tr>
+                <th>Characteristic</th>
+                <th>TLS + Fragmentation</th>
+                <th>Message-Native HMAC</th>
+            </tr>
+            <tr>
+                <td><strong>State machine</strong></td>
+                <td class="danger">1,000+ states</td>
+                <td class="success">5 states</td>
+            </tr>
+            <tr>
+                <td><strong>Authentication time</strong></td>
+                <td class="danger">200ms - 2s (variable)</td>
+                <td class="success">0.88ms (deterministic)</td>
+            </tr>
+            <tr>
+                <td><strong>Memory overhead</strong></td>
+                <td class="danger">4KB+ per session</td>
+                <td class="success">64 bytes (key storage)</td>
+            </tr>
+            <tr>
+                <td><strong>Test scenarios</strong></td>
+                <td class="danger">100+ fragmentation tests</td>
+                <td class="success">12 basic tests</td>
+            </tr>
+            <tr>
+                <td><strong>Certification effort</strong></td>
+                <td class="danger">120+ person-weeks</td>
+                <td class="success">8-12 person-weeks</td>
+            </tr>
+            <tr>
+                <td><strong>Worst-case timing</strong></td>
+                <td class="danger">Unbounded (depends on retries)</td>
+                <td class="success">Bounded (3.1ms with overhead)</td>
+            </tr>
+        </table>
+
+        <div class="callout callout-success">
+            <strong>Message-native security:</strong> 10× simpler, 100× faster, 1,000× fewer states. And actually certifiable.
+        </div>
+
+        <h2>Beyond Embedded: The General Pattern</h2>
+
+        <p>This pattern applies beyond field buses.</p>
+
+        <p><strong>The principle:</strong> Match your security primitive to your transport layer.</p>
+
+        <table>
+            <tr>
+                <th>Transport</th>
+                <th>Native Security</th>
+                <th>Anti-Pattern</th>
+            </tr>
+            <tr>
+                <td>Stream (TCP)</td>
+                <td class="success">TLS, SSH</td>
+                <td class="danger">Per-byte HMAC</td>
+            </tr>
+            <tr>
+                <td>Datagrams (UDP)</td>
+                <td class="success">DTLS, WireGuard</td>
+                <td class="danger">TCP-style sessions</td>
+            </tr>
+            <tr>
+                <td>Fixed frames (CAN)</td>
+                <td class="success">Per-frame HMAC</td>
+                <td class="danger">TLS sessions</td>
+            </tr>
+            <tr>
+                <td>Request-response (HTTP)</td>
+                <td class="success">TLS, JWT</td>
+                <td class="danger">Custom encryption</td>
+            </tr>
+            <tr>
+                <td>Broadcast (multicast)</td>
+                <td class="success">Group keys, TESLA</td>
+                <td class="danger">Point-to-point TLS</td>
+            </tr>
+        </table>
+
+        <p><strong>When transport and security match:</strong></p>
+        <ul>
+            <li>Simple implementation</li>
+            <li>Predictable behavior</li>
+            <li>Efficient performance</li>
+            <li>Straightforward certification</li>
+        </ul>
+
+        <p><strong>When they don't match:</strong></p>
+        <ul>
+            <li>Adaptation layer required</li>
+            <li>State explosion</li>
+            <li>Non-deterministic timing</li>
+            <li>Certification nightmare</li>
+        </ul>
+
+        <h2>When TLS *Does* Make Sense</h2>
+
+        <p>TLS isn't wrong everywhere. It's wrong <strong>at runtime in bounded systems.</strong></p>
+
+        <p><strong>TLS works well when:</strong></p>
+
+        <ol>
+            <li><strong>Provisioning phase:</strong> Loading keys/certs over Ethernet before operations</li>
+            <li><strong>Maintenance connections:</strong> Ground tools connecting via WiFi/Ethernet</li>
+            <li><strong>Diagnostics:</strong> Non-real-time data upload over IP</li>
+            <li><strong>Configuration:</strong> Setup and parameter loading (not time-critical)</li>
+        </ol>
+
+        <p><strong>Pattern: Use TLS for setup, message-native for runtime</strong></p>
+
+        <pre>// Provisioning phase (TLS over Ethernet/WiFi)
+provision_device() {
+    // Connect via TLS
+    tls_session = establish_tls_connection(ground_tool)
+    
+    // Receive symmetric keys
+    K_runtime = tls_session.receive_key()
+    
+    // Store in TPM
+    tpm.store_key(K_runtime)
+    
+    // Close TLS session
+    tls_session.close()
+}
+
+// Runtime phase (message-native on CAN)
+authenticate_message(msg) {
+    // Use key from provisioning
+    K = tpm.load_key(K_runtime)
+    
+    // Per-frame HMAC (no TLS)
+    return HMAC(K, msg)
+}</pre>
+
+        <div class="callout callout-success">
+            <strong>Best of both worlds:</strong> TLS where it works (Ethernet, non-real-time), message-native where it matters (field bus, real-time).
+        </div>
+
+        <h2>Conclusion: Match Primitives to Transport</h2>
+
+        <p>TLS is an excellent protocol—for the environment it was designed for.</p>
+
+        <p>Stream-oriented, variable-length, TCP-based applications with relaxed timing requirements. Web servers. Mobile apps. Desktop software.</p>
+
+        <p><strong>But safety-critical embedded systems aren't that environment.</strong></p>
+
+        <p>Bounded systems need bounded primitives:</p>
+        <ul>
+            <li><strong>Fixed-size operations</strong> that fit in frames</li>
+            <li><strong>Stateless or minimal state</strong> for determinism</li>
+            <li><strong>Per-message authentication</strong> without sessions</li>
+            <li><strong>Deterministic timing</strong> for certification</li>
+        </ul>
+
+        <p>When you force stream protocols into bounded systems, you don't get security—you get:</p>
+        <ul>
+            <li>State explosion (1,000+ states)</li>
+            <li>Non-deterministic timing (unbounded worst-case)</li>
+            <li>Certification nightmare (100+ person-weeks overhead)</li>
+            <li>Operational fragility (complex error recovery)</li>
+        </ul>
+
+        <p><strong>The solution isn't to "make TLS work."</strong></p>
+
+        <p>The solution is to <strong>design security that matches your transport layer</strong>—and for bounded systems, that means message-native primitives, not stream-oriented protocols bolted on top.</p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 3 - Runtime Revocation Is a Lie<br>
+            Why OCSP, CRLs, and "just check online" collapse in real operations. We'll explore the impossible operational tradeoffs created by runtime revocation dependencies in safety-critical embedded systems.</p>
+            
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
