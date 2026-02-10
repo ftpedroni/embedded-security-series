@@ -118,6 +118,14 @@
             margin-bottom: 32px;
             line-height: 1.4;
         }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
         .callout {
             background: #F7F7F7;
             border-left: 4px solid #000;
@@ -393,6 +401,8 @@
             <h1>PKI Everywhere Is an Architectural Smell</h1>
             <div class="subtitle">Why applying enterprise security patterns blindly breaks determinism, certification, and operations</div>
         </div>
+
+        <img src="images/01-hero-state-explosion.svg" alt="State Machine Explosion: 5 states vs 76+ states comparison diagram" class="hero-image">
 
         <p>You're in a design review for your new aircraft ground support system. The security team presents their architecture: <strong>"We'll use PKI and TLS for all authentication and data protection—industry best practices."</strong></p>
 
