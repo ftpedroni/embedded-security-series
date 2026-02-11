@@ -361,7 +361,7 @@
 
         <div class="comparison">
             <div class="comparison-card bad">
-                <h4>Stream-Oriented Protocols (TLS, SSH, DTLS)</h4>
+                <h4>Stream-Oriented Protocols (TLS, SSH)</h4>
                 <ul>
                     <li>Continuous byte streams</li>
                     <li>Variable message sizes (1B to 64KB+)</li>
@@ -509,9 +509,11 @@ struct ReassemblyBuffer {
 
         <p><strong>Add fragmentation for N fragments:</strong></p>
 
+        <p>Typical fragmentation designs require approximately 4 states per fragment (e.g., PENDING, RECEIVED, TIMEOUT, RETRY), though specific implementations may vary. For N fragments:</p>
+
         <div class="stat-box">
-            <div>4×N</div>
-            <div class="stat-label">additional states per fragment (PENDING, RECEIVED, TIMEOUT, RETRY)</div>
+            <div>~4×N</div>
+            <div class="stat-label">additional states (implementation-dependent)</div>
         </div>
 
         <p><strong>Concrete examples:</strong></p>
@@ -588,6 +590,7 @@ struct ReassemblyBuffer {
         <pre>Best case (ideal conditions):
 - 256 frames × 0.22ms = 56ms
 - No contention, no losses, sequential order
+- (Assumes minimal bit stuffing; worst-case stuffing adds ~20%)
 
 Typical case (realistic):
 - Bus 50% loaded
@@ -691,8 +694,13 @@ test_interleaved_transfers()
 struct SecureCANFrame {
     uint32_t can_id;           // Standard CAN identifier
     uint8_t  data[4];          // 4 bytes payload
-    uint32_t hmac_tag;         // 4 bytes MAC (truncated)
+    uint32_t hmac_tag;         // 4 bytes MAC (truncated to 32-bit)
 }
+
+// NOTE: 32-bit MAC provides 2^32 security against forgery.
+// Production systems should use minimum 64-bit tags where frame size permits.
+// This example demonstrates frame-size constraints; threat model assumes
+// physical access requirements provide additional security barriers.
 
 // Send authenticated message
 send_secure_frame(can_id, payload) {
@@ -721,11 +729,13 @@ receive_secure_frame() {
         <p><strong>Key properties:</strong></p>
         <ul>
             <li><strong>No fragmentation:</strong> Fits in single frame</li>
-            <li><strong>Deterministic:</strong> Fixed computation time (~0.88ms)</li>
-            <li><strong>Stateless:</strong> No session state to manage</li>
+            <li><strong>Deterministic:</strong> Fixed computation time (hardware-dependent; typically 0.1-2ms on modern embedded processors)</li>
+            <li><strong>Minimal state:</strong> Only replay protection counters, no session management</li>
             <li><strong>Simple state machine:</strong> 5 states total</li>
             <li><strong>Certifiable:</strong> Bounded worst-case behavior</li>
         </ul>
+
+        <p><strong>Example timing breakdown (representative hardware):</strong> HMAC-SHA256 computation (~0.88ms) + CAN frame transmission (0.22ms) + arbitration worst-case (1.5ms) + processing overhead (0.5ms) ≈ 3.1ms total bounded worst-case.</p>
 
         <h3>Comparison: TLS vs Message-Native</h3>
 
@@ -743,7 +753,7 @@ receive_secure_frame() {
             <tr>
                 <td><strong>Authentication time</strong></td>
                 <td class="danger">200ms - 2s (variable)</td>
-                <td class="success">0.88ms (deterministic)</td>
+                <td class="success">~3ms bounded (hardware-dependent)</td>
             </tr>
             <tr>
                 <td><strong>Memory overhead</strong></td>
@@ -762,8 +772,8 @@ receive_secure_frame() {
             </tr>
             <tr>
                 <td><strong>Worst-case timing</strong></td>
-                <td class="danger">Unbounded (depends on retries)</td>
-                <td class="success">Bounded (3.1ms with overhead)</td>
+                <td class="danger">Difficult to bound (depends on retry limits and loss patterns)</td>
+                <td class="success">Bounded (≤3.1ms with overhead)</td>
             </tr>
         </table>
 
@@ -880,7 +890,7 @@ authenticate_message(msg) {
         <p>Bounded systems need bounded primitives:</p>
         <ul>
             <li><strong>Fixed-size operations</strong> that fit in frames</li>
-            <li><strong>Stateless or minimal state</strong> for determinism</li>
+            <li><strong>Minimal state</strong> (only replay protection counters, not session management)</li>
             <li><strong>Per-message authentication</strong> without sessions</li>
             <li><strong>Deterministic timing</strong> for certification</li>
         </ul>
