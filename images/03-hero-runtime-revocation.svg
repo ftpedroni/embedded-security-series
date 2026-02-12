@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Title -->
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    Runtime Revocation Is a Lie
+  </text>
+  <text x="600" y="95" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    The Hard-Fail vs Soft-Fail Dilemma: Both Options Fail
+  </text>
+
+  <!-- Central problem node -->
+  <g id="problem-node">
+    <rect x="450" y="150" width="300" height="80" rx="12" fill="#DD6B20" stroke="white" stroke-width="3"/>
+    <text x="600" y="180" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      OCSP Responder
+    </text>
+    <text x="600" y="205" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      Unreachable
+    </text>
+  </g>
+
+  <!-- Arrows down -->
+  <g id="decision-arrows">
+    <!-- Left arrow -->
+    <path d="M 500 230 L 300 300" stroke="white" stroke-width="4" fill="none"/>
+    <path d="M 315 285 L 300 300 L 310 310" fill="white"/>
+    
+    <!-- Right arrow -->
+    <path d="M 700 230 L 900 300" stroke="white" stroke-width="4" fill="none"/>
+    <path d="M 890 310 L 900 300 L 885 285" fill="white"/>
+    
+    <!-- Question mark between -->
+    <text x="600" y="270" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white" text-anchor="middle">?</text>
+  </g>
+
+  <!-- Left option: Hard-Fail -->
+  <g id="hard-fail">
+    <text x="300" y="285" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+      Option A
+    </text>
+    
+    <rect x="150" y="310" width="300" height="120" rx="12" fill="#E53E3E" stroke="white" stroke-width="3"/>
+    
+    <text x="300" y="345" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">
+      HARD-FAIL
+    </text>
+    <text x="300" y="375" font-family="Arial, sans-serif" font-size="15" fill="white" text-anchor="middle">
+      "Block authentication"
+    </text>
+    
+    <!-- Consequences -->
+    <text x="300" y="405" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ✗ Fleet grounded
+    </text>
+    <text x="300" y="423" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ✗ Single point of failure
+    </text>
+  </g>
+
+  <!-- Right option: Soft-Fail -->
+  <g id="soft-fail">
+    <text x="900" y="285" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+      Option B
+    </text>
+    
+    <rect x="750" y="310" width="300" height="120" rx="12" fill="#E53E3E" stroke="white" stroke-width="3"/>
+    
+    <text x="900" y="345" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">
+      SOFT-FAIL
+    </text>
+    <text x="900" y="375" font-family="Arial, sans-serif" font-size="15" fill="white" text-anchor="middle">
+      "Proceed anyway"
+    </text>
+    
+    <!-- Consequences -->
+    <text x="900" y="405" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ✗ Revocation doesn't work
+    </text>
+    <text x="900" y="423" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ✗ Attacker can block OCSP
+    </text>
+  </g>
+
+  <!-- Bottom message: No good option -->
+  <g id="no-good-option">
+    <path d="M 300 430 L 300 470" stroke="white" stroke-width="3" stroke-dasharray="8,4"/>
+    <path d="M 900 430 L 900 470" stroke="white" stroke-width="3" stroke-dasharray="8,4"/>
+    
+    <rect x="250" y="480" width="700" height="60" rx="12" fill="rgba(0,0,0,0.4)" stroke="white" stroke-width="3"/>
+    
+    <text x="600" y="510" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">
+      Both Options Fail in Operations
+    </text>
+    <text x="600" y="533" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      Hard-fail = operational disaster  |  Soft-fail = security theater
+    </text>
+  </g>
+
+  <!-- Solution box (green) -->
+  <g id="solution">
+    <text x="600" y="565" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+      ✓ Solution: Procedural Revocation
+    </text>
+    <rect x="350" y="570" width="500" height="35" rx="6" fill="rgba(56, 161, 105, 0.3)" stroke="#38A169" stroke-width="2"/>
+    <text x="600" y="593" font-family="Arial, sans-serif" font-size="13" fill="white" text-anchor="middle">
+      Delete keys at MRO (no runtime OCSP/CRL dependency)
+    </text>
+  </g>
+
+  <!-- Bottom text -->
+  <text x="600" y="625" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-style="italic">
+    Article 3 of 8: Security That Survives Certification
+  </text>
+</svg>
