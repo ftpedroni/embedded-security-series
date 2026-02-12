@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime Revocation Is a Lie</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover { color: #444; }
+        .toc-link.toc-h3.active { color: #667eea; }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .comparison-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .comparison-card.bad li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: #E53E3E;
+            font-weight: 700;
+        }
+        .comparison-card.good li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38A169;
+            font-weight: 700;
+        }
+        .decision-tree {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+        .decision-node {
+            background: white;
+            border: 2px solid #4299E1;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .decision-bad {
+            border-color: #E53E3E;
+            background: #FFF5F5;
+        }
+        .decision-arrow {
+            text-align: center;
+            color: #4299E1;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        .stat-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 200px;
+        }
+        .stat-label {
+            font-size: 16px;
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .flow-diagram {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        .flow-step {
+            background: white;
+            border-left: 4px solid #4299E1;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 4px;
+        }
+        .flow-step-num {
+            display: inline-block;
+            background: #4299E1;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 12px;
+        }
+        code {
+            background: #F7FAFC;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 18px;
+            color: #E53E3E;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .visual-bar {
+            height: 60px;
+            background: linear-gradient(90deg, #E53E3E 0%, #FC8181 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 16px 0;
+        }
+        .visual-bar.good {
+            background: linear-gradient(90deg, #38A169 0%, #68D391 100%);
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .page-wrapper { flex-direction: column; gap: 0; padding: 20px; }
+            .toc-sidebar { display: none; }
+            .container { max-width: 100%; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            const tocLinks = document.querySelectorAll('.toc-link');
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                headings.forEach(heading => {
+                    if (scrollPosition >= heading.offsetTop) current = heading.id;
+                });
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC();
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+        </aside>
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 3 of 8</div>
+            <h1>Cybersecurity in Aircraft–Ground Systems: Runtime Revocation Is a Lie</h1>
+            <div class="subtitle">Why OCSP, CRLs, and "just check online" collapse in real operations</div>
+        </div>
+
+        <img src="images/03-hero-runtime-revocation.svg" alt="Runtime Revocation operational failure diagram" class="hero-image">
+
+        <p>Your security team has designed the certificate infrastructure. During the design review, someone asks: <strong>"What happens when we need to revoke a certificate?"</strong></p>
+
+        <p>The answer comes quickly: <strong>"OCSP. We'll check certificate status in real-time during authentication."</strong></p>
+
+        <p>It sounds reasonable. OCSP (Online Certificate Status Protocol) is an RFC standard. Everyone uses it. Problem solved.</p>
+
+        <p>Except <strong>it doesn't work in the operational reality of safety-critical embedded systems.</strong></p>
+
+        <p>Not because OCSP is technically broken. Because the assumptions OCSP makes—always-on connectivity, acceptable latency, graceful degradation—are fundamentally incompatible with deterministic, availability-constrained, certified embedded systems.</p>
+
+        <div class="callout callout-warning">
+            <strong>Assumed threat model for this article:</strong> A pre-established trust architecture where a bounded set of authorized ground tools authenticates to aircraft systems. Revocation events are low-frequency (stolen equipment, insider compromise, supply chain incidents). The maintenance network may be intermittently connected. The adversary may be capable of network-level interference but is not assumed to have compromised the aircraft systems directly. Under these assumptions—which are representative of civil and military aviation maintenance infrastructure—runtime revocation introduces operational tradeoffs that conflict with certification requirements.
+        </div>
+
+        <h2>The OCSP Fantasy</h2>
+
+        <p>Here's how OCSP is supposed to work:</p>
+
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <strong>Client receives certificate during TLS handshake</strong>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <strong>Client extracts OCSP responder URL from certificate</strong>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <strong>Client sends OCSP request to responder</strong><br>
+                <span style="font-size: 14px; color: #718096;">"Is certificate serial 0x1234ABCD still valid?"</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">4</span>
+                <strong>OCSP responder checks database, returns status</strong><br>
+                <span style="font-size: 14px; color: #718096;">"Good" / "Revoked" / "Unknown"</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">5</span>
+                <strong>Client proceeds or aborts based on response</strong>
+            </div>
+        </div>
+
+        <p><strong>In theory:</strong> Real-time revocation checking. Compromised certificates immediately rejected.</p>
+
+        <p><strong>In practice:</strong> Steps 3-5 fail constantly.</p>
+
+        <h2>The Operational Reality</h2>
+
+        <h3>Scenario 1: OCSP Responder Unavailable</h3>
+
+        <div class="callout">
+            <p><strong>Location:</strong> Remote maintenance facility, 200 miles from headquarters<br>
+            <strong>Time:</strong> 2:00 AM<br>
+            <strong>Situation:</strong> Emergency maintenance required</p>
+        </div>
+
+        <pre>Technician: [connects maintenance laptop]
+
+System: Authenticating...
+        Certificate received
+        Checking revocation status...
+        
+        OCSP request to ocsp.example.com
+        DNS lookup... timeout (10 seconds)
+        Retry 1... timeout (10 seconds)
+        Retry 2... timeout (10 seconds)
+        Retry 3... timeout (10 seconds)
+
+Total elapsed: 40 seconds
+
+Now what?</pre>
+
+        <p><strong>The question that kills operations:</strong></p>
+
+        <div class="decision-tree">
+            <div class="decision-node">
+                OCSP Responder Unreachable
+            </div>
+            <div class="decision-arrow">↓</div>
+            <div class="decision-node decision-bad">
+                <strong>Option A: Hard-fail</strong><br>
+                Block all authentication fleet-wide
+            </div>
+            <div class="decision-arrow">OR</div>
+            <div class="decision-node decision-bad">
+                <strong>Option B: Soft-fail</strong><br>
+                Proceed without revocation check
+            </div>
+        </div>
+
+        <h3>The Hard-Fail Dilemma</h3>
+
+        <p><strong>Hard-fail means:</strong> If OCSP check fails, authentication fails.</p>
+
+        <p><strong>Operational impact:</strong></p>
+        <ul>
+            <li><strong>OCSP responder outage = fleet-wide grounding</strong></li>
+            <li>Network partition = no maintenance possible</li>
+            <li>DNS issues = operations halted</li>
+            <li>Certificate server maintenance = operational disruption</li>
+            <li>DDoS against OCSP = service denial</li>
+        </ul>
+
+        <div class="callout callout-danger">
+            You've created a <strong>single point of failure</strong> in infrastructure you don't control, that affects safety-critical operations.
+        </div>
+
+        <h3>The Soft-Fail Dilemma</h3>
+
+        <p><strong>Soft-fail means:</strong> If OCSP check fails, proceed anyway.</p>
+
+        <p><strong>Security impact:</strong></p>
+        <ul>
+            <li><strong>Revocation becomes optional</strong> (attacker can block OCSP)</li>
+            <li>Compromised certificates stay valid</li>
+            <li>Certificate revocation loses its purpose</li>
+            <li>Compliance violation (if regulations require revocation checking)</li>
+        </ul>
+
+        <div class="callout callout-danger">
+            Soft-fail means <strong>revocation doesn't work</strong> when you need it most—when an attacker is actively exploiting a compromise.
+        </div>
+
+        <h3>The Cached Response Problem</h3>
+
+        <p>Some implementations try a middle ground: <strong>"Cache OCSP responses for 24-48 hours."</strong></p>
+
+        <p><strong>Problems:</strong></p>
+
+        <ol>
+            <li><strong>Stale data:</strong> Certificate revoked at T+0, cache valid until T+48h</li>
+            <li><strong>Initial connection:</strong> No cache on first authentication</li>
+            <li><strong>Cache invalidation:</strong> When do you trust cached "good" vs demand fresh check?</li>
+            <li><strong>Storage requirements:</strong> Cache for every certificate ever seen</li>
+            <li><strong>Compliance:</strong> Is 48-hour-old revocation status acceptable?</li>
+        </ol>
+
+        <div class="stat-box">
+            <div>48 hours</div>
+            <div class="stat-label">window where revoked cert still works</div>
+        </div>
+
+        <h2>Scenario 2: OCSP as Attack Vector</h2>
+
+        <p>An attacker who compromises a ground tool certificate doesn't just get access. They get <strong>operational leverage.</strong></p>
+
+        <h3>Attack Timeline</h3>
+
+        <pre>T+0 hours:  Attacker compromises ground tool certificate
+            Security team detects compromise
+            Certificate revoked in CA database
+            OCSP responder updated
+
+T+0.5 hours: Attacker attempts to use compromised certificate
+
+// Soft-fail configuration:
+T+0.5 hours: Attacker blocks OCSP requests (DNS poisoning, firewall)
+            OCSP check times out
+            System soft-fails → authentication succeeds
+            Attacker has access despite revocation
+
+// Hard-fail configuration:
+T+0.5 hours: Attacker blocks OCSP requests
+            OCSP check times out
+            System hard-fails → all authentication blocked
+            Attacker achieves denial of service
+            Fleet grounded until network fixed</pre>
+
+        <p><strong>Outcome:</strong> In both configurations, a network-capable attacker who can interpose on OCSP traffic achieves a meaningful objective.</p>
+
+        <ul>
+            <li><strong>Soft-fail:</strong> Attacker blocks OCSP → authentication proceeds with revoked credential → access maintained despite revocation</li>
+            <li><strong>Hard-fail:</strong> Attacker blocks OCSP → authentication fails → availability degraded or fleet grounded</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            This attack requires the adversary to already control network infrastructure (DNS, firewall, or routing path to the OCSP responder) at the time of the revocation event. That is a meaningful precondition. The point is not that this attack is trivial—it is that OCSP gives a network-capable adversary operational leverage that is absent in a purely procedural model. <strong>Choosing between soft-fail and hard-fail forces a tradeoff between security integrity and operational availability that has no good solution under network-adversary assumptions.</strong>
+        </div>
+
+        <h2>Why CRLs Don't Fix This</h2>
+
+        <p>Certificate Revocation Lists (CRLs) are the older alternative to OCSP.</p>
+
+        <p><strong>How CRLs work:</strong></p>
+        <ol>
+            <li>CA publishes a list of revoked certificate serial numbers</li>
+            <li>Clients download and cache the CRL</li>
+            <li>During authentication, client checks if cert serial is in CRL</li>
+        </ol>
+
+        <p><strong>Sounds better than OCSP, right?</strong> You download once, cache locally, no per-connection lookup.</p>
+
+        <h3>CRL Problems</h3>
+
+        <p><strong>Problem 1: CRL Size</strong></p>
+
+        <div class="stat-box">
+            <div>10 MB</div>
+            <div class="stat-label">typical CRL size for enterprise CA</div>
+        </div>
+
+        <p>Every device needs to download and store a 10MB file. For a fleet of 100 aircraft × 20 ground tools = 2,000 endpoints, that's <strong>20GB of CRL storage</strong> distributed across the fleet.</p>
+
+        <p><strong>Problem 2: Update Frequency</strong></p>
+
+        <p>CRLs are typically valid for 7-30 days. During that window:</p>
+        <ul>
+            <li>Newly revoked certificates still accepted (stale CRL)</li>
+            <li>Clients must re-download entire CRL every 7 days</li>
+            <li>Network bandwidth consumed fleet-wide</li>
+            <li>Update coordination required (when? how?)</li>
+        </ul>
+
+        <p><strong>Problem 3: Delta CRLs</strong></p>
+
+        <p>To reduce update size, some systems use "delta CRLs" (only changes since last full CRL).</p>
+
+        <p><strong>New problems:</strong></p>
+        <ul>
+            <li>Client must track which CRL version it has</li>
+            <li>Must download and apply deltas in order</li>
+            <li>Miss one delta → invalid state</li>
+            <li>Periodic full CRL download still required</li>
+        </ul>
+
+        <p><strong>Problem 4: Same hard-fail/soft-fail dilemma</strong></p>
+
+        <div class="decision-tree">
+            <div class="decision-node">
+                CRL Download Fails
+            </div>
+            <div class="decision-arrow">↓</div>
+            <div class="decision-node decision-bad">
+                <strong>Hard-fail:</strong> No CRL = no authentication
+            </div>
+            <div class="decision-arrow">OR</div>
+            <div class="decision-node decision-bad">
+                <strong>Soft-fail:</strong> Use stale CRL (7-30 days old)
+            </div>
+        </div>
+
+        <h2>What About Modern Mitigations?</h2>
+
+        <p>A technically credible reader will object: <em>"You're describing the naive OCSP model from 2000. Modern PKI has answered these problems."</em></p>
+
+        <p>Fair. Let's go through each mitigation and analyze precisely where it succeeds and where it fails under the assumptions of this article.</p>
+
+        <h3>OCSP Stapling (RFC 6066)</h3>
+
+        <p>OCSP stapling has the server pre-fetch its own OCSP response and include ("staple") it in the TLS handshake, eliminating the client-side OCSP request. The client receives the certificate and its revocation status in a single step, signed by the CA.</p>
+
+        <p><strong>What it genuinely solves:</strong></p>
+        <ul>
+            <li>Eliminates per-client OCSP requests → scales to large deployments</li>
+            <li>Removes client-side network dependency for revocation checks</li>
+            <li>Reduces latency (no separate OCSP round trip)</li>
+            <li>Protects client privacy (CA doesn't see which certs are being checked)</li>
+        </ul>
+
+        <p><strong>What it does not solve:</strong></p>
+        <ul>
+            <li><strong>The server still has a CA dependency.</strong> Stapled responses have validity periods (typically 24–48 hours). The server must periodically contact the CA to refresh them. If the server is deployed in an intermittently connected environment (e.g., an aircraft in a remote MRO facility), it eventually presents a stale or missing staple.</li>
+            <li><strong>Hard-fail/soft-fail dilemma persists at the server level.</strong> If the server cannot refresh its staple before expiry, it either refuses TLS connections (hard-fail) or continues without a valid staple (soft-fail on revocation).</li>
+            <li><strong>Stapling is optional by default.</strong> Without Must-Staple (see below), a server that cannot obtain a staple can simply omit it. Clients that don't enforce staple presence cannot distinguish "no staple because OCSP is down" from "no staple because certificate is revoked."</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Verdict on OCSP Stapling:</strong> Moves the CA dependency from the client to the server. Does not eliminate it. For servers in intermittently connected environments, the availability problem is identical—just shifted one step.
+        </div>
+
+        <h3>OCSP Must-Staple (RFC 7633)</h3>
+
+        <p>Must-Staple is a certificate extension that declares: "I will always provide an OCSP staple. Clients must reject connections where a valid staple is absent."</p>
+
+        <p><strong>What it genuinely solves:</strong></p>
+        <ul>
+            <li>Closes the soft-fail loophole by making staple presence mandatory</li>
+            <li>Allows CAs to reduce certificate lifetimes, limiting exposure windows</li>
+            <li>Gives network administrators a strong compliance signal</li>
+        </ul>
+
+        <p><strong>What it does not solve:</strong></p>
+        <ul>
+            <li><strong>It encodes hard-fail by design.</strong> A Must-Staple certificate whose server cannot refresh its OCSP response simply stops working. For a maintenance ground tool in a remote facility without CA connectivity, this is operationally identical to hard-fail OCSP—the tool cannot authenticate until connectivity to the CA is restored.</li>
+            <li><strong>CA infrastructure becomes a required operational dependency.</strong> Under Must-Staple, CA availability is no longer a best-effort concern—it is a hard operational requirement during any revocation window. This is precisely the availability dependency that is incompatible with DO-178C determinism requirements.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Verdict on OCSP Must-Staple:</strong> Solves the soft-fail security problem by creating a hard dependency on CA connectivity. The operational availability problem is not mitigated—it is formalized. For safety-critical systems where CA connectivity cannot be guaranteed, Must-Staple converts a security tradeoff into a hard operational failure mode.
+        </div>
+
+        <h3>Local / Internal OCSP Responders</h3>
+
+        <p>Enterprise PKI deployments frequently include internal OCSP responders on the organizational network, eliminating external internet dependency. The OCSP responder is local, high-availability, and under organizational control.</p>
+
+        <p><strong>What it genuinely solves:</strong></p>
+        <ul>
+            <li>Eliminates external internet dependency</li>
+            <li>Reduces latency significantly</li>
+            <li>Allows high-availability configuration (redundant responders)</li>
+            <li>Keeps revocation checks inside the security perimeter</li>
+        </ul>
+
+        <p><strong>What it does not solve:</strong></p>
+        <ul>
+            <li><strong>The local network is still a runtime dependency.</strong> Aircraft at remote MRO facilities, maintenance at forward operating bases, or operations in network-degraded environments cannot reach an internal OCSP responder any more reliably than an external one.</li>
+            <li><strong>The hard-fail/soft-fail dilemma is unchanged.</strong> If the internal network is down or unreachable, the same binary choice applies. Internal responders have higher expected availability but do not change the fundamental determinism problem.</li>
+            <li><strong>Local responders are high-availability systems that must be certified.</strong> Adding a high-availability OCSP responder to the operational dependency graph adds a new system component with its own availability, certification, and maintenance burden. Under DO-178C, any system component that can affect safety-critical operations must be analyzed for failure modes and availability.</li>
+            <li><strong>DO-178C requires bounded worst-case analysis.</strong> Even with an internal OCSP responder, the authentication system now has a worst-case timing profile that includes responder latency, network round-trip, and error handling—none of which are provably bounded in a way acceptable for DAL A/B certification without additional qualification of the entire network stack.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Verdict on Local OCSP Responders:</strong> Genuinely improves availability for well-connected deployments. Does not solve the determinism problem. Does not address remote/disconnected operational scenarios. Adds a new high-availability dependency to the certification scope.
+        </div>
+
+        <h3>Short-Lived Certificates</h3>
+
+        <p>Increasingly recommended by modern PKI practitioners: issue certificates with very short validity periods (24–72 hours or even shorter). If certificates expire quickly, revocation becomes largely unnecessary—expired certs are automatically invalid.</p>
+
+        <p><strong>What it genuinely solves:</strong></p>
+        <ul>
+            <li>Dramatically reduces the revocation window</li>
+            <li>Eliminates the need for explicit revocation for most compromise scenarios</li>
+            <li>Reduces CRL/OCSP infrastructure complexity</li>
+            <li>Aligns with modern cloud-native identity practices (SPIFFE/SPIRE, etc.)</li>
+        </ul>
+
+        <p><strong>What it does not solve:</strong></p>
+        <ul>
+            <li><strong>Moves the dependency from revocation to issuance.</strong> Short-lived certificates require frequent re-issuance, which requires online CA access at regular intervals. For a ground tool with a 24-hour certificate, the CA must be reachable every 24 hours. This is the same availability dependency—just triggered by issuance instead of revocation.</li>
+            <li><strong>Operational impact is identical to hard-fail OCSP.</strong> If the CA is unreachable at certificate renewal time, the ground tool cannot obtain a new certificate and cannot authenticate. The failure mode is structurally identical: network dependency causes authentication failure.</li>
+            <li><strong>Does not address the deterministic runtime behavior requirement.</strong> Even if the certificate is always fresh, the TLS handshake and certificate validation still introduce variable-latency operations. Short-lived certs do not change the bounded-system incompatibilities described in Article #2.</li>
+            <li><strong>Requires online CA for every operational cycle.</strong> For aircraft maintenance in remote locations or forward bases, requiring CA connectivity every 24–72 hours may not be operationally feasible.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Verdict on Short-Lived Certificates:</strong> Genuinely reduces the need for explicit revocation. Does not eliminate the CA dependency—it regularizes it. For systems that cannot guarantee periodic CA connectivity, short-lived certs trade a rare revocation problem for a frequent issuance problem. The operational availability constraint is identical.
+        </div>
+
+        <h3>Delta CRLs (RFC 5280)</h3>
+
+        <p>Rather than distributing the full CRL on every update, delta CRLs contain only the changes since the last base CRL, dramatically reducing update bandwidth.</p>
+
+        <p><strong>What it genuinely solves:</strong></p>
+        <ul>
+            <li>Reduces update bandwidth by orders of magnitude for large CRLs</li>
+            <li>Allows more frequent updates without bandwidth penalty</li>
+            <li>Reduces storage requirements per update cycle</li>
+        </ul>
+
+        <p><strong>What it does not solve:</strong></p>
+        <ul>
+            <li><strong>The base CRL download requirement remains.</strong> Delta CRLs require a current base CRL to apply against. Base CRLs must still be downloaded periodically.</li>
+            <li><strong>State tracking complexity increases.</strong> Clients must correctly track their current base CRL version, apply deltas in order, and detect missing deltas. A missed delta puts the client in an invalid state requiring full base CRL re-download.</li>
+            <li><strong>Hard-fail/soft-fail dilemma unchanged.</strong> If a delta update fails, the client must decide: use the stale CRL (soft-fail) or reject authentication (hard-fail).</li>
+            <li><strong>Certification complexity increases.</strong> The delta CRL state machine (base version tracking, delta ordering, gap detection, full refresh triggering) must be specified, implemented, and certified under DO-178C. This adds a non-trivial state machine to the certification scope.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Verdict on Delta CRLs:</strong> Genuine engineering improvement for bandwidth-constrained environments. Does not change the fundamental availability and determinism properties. Adds implementation complexity that increases certification scope.
+        </div>
+
+        <h3>Summary: Why Mitigations Don't Change the Core Argument</h3>
+
+        <div class="callout">
+            <strong>The thesis is not:</strong> "OCSP is poorly implemented."<br><br>
+            <strong>The thesis is:</strong> Any mechanism that makes authentication correctness contingent on the runtime availability of an external service is incompatible with DO-178C's requirement for deterministic, bounded behavior in safety-critical systems.<br><br>
+            Every mitigation above improves specific operational properties (bandwidth, latency, privacy, availability). None eliminates the fundamental architecture: <strong>a network-reachable service must respond within a bounded window, or the system enters an error state that requires a policy decision between security and availability.</strong><br><br>
+            That policy decision is not impossible to certify — but certifying it requires explicit safety assessment, hazard analysis, documented acceptance of the availability/security tradeoff, supporting operational procedures, and potentially a DAL allocation that reflects the failure consequences. It becomes a safety-relevant architectural decision that must be explicitly justified and accepted by the certification authority. That is a substantially higher burden than simply not having the dependency.
+        </div>
+
+        <h2>The Alternative: Procedural Revocation</h2>
+
+        <p>Stop trying to make runtime revocation work. It doesn't and can't in safety-critical systems.</p>
+
+        <p><strong>Instead: revocation is a procedural event, not a runtime check.</strong></p>
+
+        <h3>The Key Insight</h3>
+
+        <p>Remember the architecture from Article #1?</p>
+
+        <ul>
+            <li><strong>Provisioning phase:</strong> PKI lives here (offline, controlled)</li>
+            <li><strong>Runtime phase:</strong> Symmetric operations only (no PKI)</li>
+        </ul>
+
+        <p><strong>Revocation happens in provisioning, not runtime.</strong></p>
+
+        <p>This architecture is specifically appropriate when the following system conditions hold:</p>
+        <ul>
+            <li><strong>Bounded, pre-authorized trust:</strong> The set of entities that may authenticate is known at provisioning time and changes infrequently</li>
+            <li><strong>Low revocation frequency:</strong> Revocation events are rare (equipment compromise, not routine key rotation for thousands of daily users)</li>
+            <li><strong>Physical access is a deployment constraint:</strong> Aircraft already require scheduled maintenance visits; adding a key provisioning step to the maintenance cycle is operationally feasible</li>
+            <li><strong>Availability is a hard requirement:</strong> Authentication must succeed or fail deterministically without runtime external dependencies</li>
+        </ul>
+
+        <p>These conditions describe aviation maintenance infrastructure accurately. They do not describe web PKI (open trust, millions of certificates, high churn) or enterprise identity management (thousands of daily users, dynamic onboarding). Procedural revocation is not universally superior—it is superior <strong>in bounded systems where provisioning cycles align with operational maintenance schedules</strong>.</p>
+
+        <h3>How Procedural Revocation Works</h3>
+
+        <p><strong>Normal Operations:</strong></p>
+
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <strong>Ground tool provisioned with K_AG keys</strong><br>
+                <span style="font-size: 14px; color: #718096;">Factory or MRO, TPM/SE injection</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <strong>Aircraft provisioned with same K_AG keys</strong><br>
+                <span style="font-size: 14px; color: #718096;">Pairwise authorization: Aircraft A ↔ Ground Tool G</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <strong>Runtime authentication uses K_AG (HMAC)</strong><br>
+                <span style="font-size: 14px; color: #718096;">No certificates, no OCSP, no CRL</span>
+            </div>
+        </div>
+
+        <p><strong>Revocation Event:</strong></p>
+
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <strong>Ground tool G compromised (detected)</strong>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <strong>Security team issues revocation order</strong><br>
+                <span style="font-size: 14px; color: #718096;">Work order: "Revoke authorization for Ground Tool G"</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <strong>MRO technician visits each aircraft</strong><br>
+                <span style="font-size: 14px; color: #718096;">Connects to aircraft with master provisioning tool</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">4</span>
+                <strong>Delete K_AG keys for Ground Tool G from aircraft TPM</strong><br>
+                <span style="font-size: 14px; color: #718096;">TPM command: delete_key("K_AG_ground_tool_G")</span>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">5</span>
+                <strong>Audit log records revocation</strong><br>
+                <span style="font-size: 14px; color: #718096;">Aircraft SN, revoked key ID, technician, timestamp</span>
+            </div>
+        </div>
+
+        <p><strong>Result:</strong> Ground Tool G can no longer authenticate to any aircraft. No runtime checks needed.</p>
+
+        <h3>Implementation</h3>
+
+        <pre>// Procedural revocation (conceptual)
+class RevocationManager {
+    revoke_ground_tool(aircraft_sn, ground_tool_id, reason) {
+        // This runs in MRO facility, not at runtime
+        
+        // 1. Connect to aircraft with master provisioning tool
+        aircraft_tpm = connect_to_aircraft(aircraft_sn)
+        
+        // 2. Verify master credentials
+        authenticate_as_provisioner()
+        
+        // 3. Delete authorization key
+        key_id = f"K_AG_{ground_tool_id}"
+        result = aircraft_tpm.delete_key(key_id)
+        
+        if result.success:
+            // 4. Record in audit log
+            audit_log.record({
+                event: "KEY_REVOKED",
+                aircraft_sn: aircraft_sn,
+                ground_tool_id: ground_tool_id,
+                key_id: key_id,
+                reason: reason,
+                technician: current_user(),
+                timestamp: utc_now()
+            })
+            
+            // 5. Update central database
+            database.mark_revoked(
+                aircraft_sn: aircraft_sn,
+                ground_tool_id: ground_tool_id,
+                timestamp: utc_now()
+            )
+            
+            return RevocationResult.SUCCESS
+        else:
+            log_error(f"Failed to revoke {key_id}")
+            return RevocationResult.FAILED
+    }
+    
+    revoke_aircraft(aircraft_sn, reason) {
+        // Revoke entire aircraft's authorization to ground tools
+        
+        ground_tools = database.get_authorized_tools(aircraft_sn)
+        
+        for tool in ground_tools:
+            tool_tpm = connect_to_ground_tool(tool.id)
+            authenticate_as_provisioner()
+            
+            key_id = f"K_AG_{aircraft_sn}"
+            tool_tpm.delete_key(key_id)
+            
+            audit_log.record({
+                event: "AIRCRAFT_REVOKED",
+                aircraft_sn: aircraft_sn,
+                ground_tool_id: tool.id,
+                reason: reason,
+                technician: current_user(),
+                timestamp: utc_now()
+            })
+        }
+    }
+}</pre>
+
+        <h3>Key Properties</h3>
+
+        <ul>
+            <li><strong>No runtime dependencies:</strong> No OCSP, no CRL, no network</li>
+            <li><strong>Deterministic:</strong> Key exists → authentication succeeds. Key deleted → authentication fails.</li>
+            <li><strong>Auditable:</strong> Every revocation logged with who, when, why</li>
+            <li><strong>Offline:</strong> Works without connectivity</li>
+            <li><strong>Procedural:</strong> Follows work order process (traceable)</li>
+        </ul>
+
+        <h2>Handling the "Emergency Revocation" Objection</h2>
+
+        <p><strong>Objection:</strong> "What if we need to revoke immediately? Sending technicians to every aircraft takes days!"</p>
+
+        <p><strong>Response:</strong> That's the wrong question.</p>
+
+        <h3>The Real Questions</h3>
+
+        <p><strong>1. How did the compromise happen?</strong></p>
+
+        <p>Under the operational assumptions stated in this article—closed-loop aviation maintenance infrastructure with tightly controlled ground tool distribution—the dominant compromise pathways are physical and procedural rather than remote exploitation:</p>
+        <ul>
+            <li>Physical theft of the ground tool</li>
+            <li>Insider threat (authorized technician misusing credentials)</li>
+            <li>Supply chain attack (compromised hardware or firmware before deployment)</li>
+            <li>Procedural failure (lost, misplaced, or transferred without proper authorization)</li>
+        </ul>
+
+        <p>Modern ground tools may also be exposed to software update mechanisms, USB interfaces, and in some deployments, network-accessible diagnostic or telemetry channels. These introduce remote attack surface that is deployment-specific. The procedural revocation argument does not assume zero remote attack surface—it assumes that <strong>under the stated threat model, the dominant revocation triggers are detectable through physical security and access control processes</strong>, and that even remotely-originated compromises require physical-layer investigation and response procedures regardless of whether runtime revocation was in effect.</p>
+
+        <p><strong>All of these require procedural response anyway.</strong> You're not just revoking keys—you're:</p>
+        <ul>
+            <li>Investigating how the compromise occurred</li>
+            <li>Reviewing access logs</li>
+            <li>Checking which aircraft were accessed</li>
+            <li>Determining if data was exfiltrated or manipulated</li>
+            <li>Updating physical security procedures</li>
+            <li>Coordinating with regulatory authorities if required</li>
+        </ul>
+
+        <p><strong>2. What's the actual threat window?</strong></p>
+
+        <p>If Ground Tool G is stolen on Monday, how long until it's used maliciously?</p>
+
+        <div class="callout">
+            <strong>Realistic timeline:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li><strong>T+0h:</strong> Tool reported stolen</li>
+                <li><strong>T+24h:</strong> Investigation completed, revocation authorized</li>
+                <li><strong>T+24-72h:</strong> Technicians visit aircraft to delete keys</li>
+                <li><strong>T+72h:</strong> All aircraft updated</li>
+            </ul>
+        </div>
+
+        <p><strong>During 72-hour window:</strong></p>
+        <ul>
+            <li>Physical security on high alert</li>
+            <li>Access to aircraft restricted</li>
+            <li>Surveillance increased</li>
+            <li>Law enforcement notified</li>
+        </ul>
+
+        <p><strong>The procedural response is faster and more effective than runtime revocation checking.</strong></p>
+
+        <h3>Defense in Depth</h3>
+
+        <p>Procedural revocation is one layer. Others include:</p>
+
+        <ol>
+            <li><strong>Physical security:</strong> Ground tools stored in locked facility</li>
+            <li><strong>Hardware security:</strong> TPM/SE with PIN protection</li>
+            <li><strong>Monitoring:</strong> All authentication attempts logged</li>
+            <li><strong>Geofencing:</strong> Ground tools only work at authorized locations</li>
+            <li><strong>Session limits:</strong> Authentication expires after X hours</li>
+        </ol>
+
+        <h2>Comparison: Runtime vs Procedural</h2>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Runtime Revocation (OCSP/CRL)</p>
+            <div class="visual-bar" style="width: 100%;">
+                Network dependent | 40s timeouts | Hard/soft-fail dilemma
+            </div>
+        </div>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Procedural Revocation</p>
+            <div class="visual-bar good" style="width: 5%;">
+                No dependencies | Deterministic | Auditable
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <strong>Procedural revocation:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li>No runtime dependencies (no OCSP, no CRL)</li>
+                <li>No hard-fail/soft-fail dilemma</li>
+                <li>No stale data problems</li>
+                <li>No attacker leverage via network blocking</li>
+                <li>Fully auditable (who, when, why)</li>
+                <li>Certifiable behavior</li>
+            </ul>
+        </div>
+
+        <h2>When Runtime Revocation Makes Sense</h2>
+
+        <p>To be fair: runtime revocation checking works in specific contexts.</p>
+
+        <p><strong>Use OCSP/CRL when:</strong></p>
+        <ol>
+            <li><strong>Dynamic trust model:</strong> Authenticating unknown parties (web browsers)</li>
+            <li><strong>High churn rate:</strong> Thousands of certs issued/revoked daily</li>
+            <li><strong>Network is reliable:</strong> Always-on connectivity guaranteed</li>
+            <li><strong>Soft-fail acceptable:</strong> Graceful degradation OK</li>
+            <li><strong>Non-safety-critical:</strong> Operational disruption tolerable</li>
+        </ol>
+
+        <p><strong>Don't use runtime revocation when:</strong></p>
+        <ol>
+            <li><strong>Pre-established trust:</strong> Authorization known at provisioning</li>
+            <li><strong>Low churn rate:</strong> Revocations are rare events</li>
+            <li><strong>Network unreliable:</strong> Remote locations, intermittent connectivity</li>
+            <li><strong>Safety-critical:</strong> Operational availability required</li>
+            <li><strong>Certification required:</strong> Deterministic behavior mandated</li>
+        </ol>
+
+        <h2>Conclusion: Revocation Is Policy, Not Protocol</h2>
+
+        <p>The title is "Runtime Revocation Is a Lie."</p>
+
+        <p>Not because revocation is impossible. Because <strong>runtime checking creates operationally unsolvable dilemmas that are structurally incompatible with certified safety-critical systems.</strong></p>
+
+        <p>The incompatibility is technical, not rhetorical:</p>
+
+        <ul>
+            <li><strong>DO-178C requires deterministic worst-case behavior.</strong> A system whose authentication path includes a network-dependent OCSP query can technically provide a worst-case timing bound — but that bound is: <em>timeout × retry_count + worst-case network latency + worst-case responder delay + error handling path</em>. Under realistic configurations, this bound is measured in tens of seconds. The problem is not that a bound cannot be defined. The problem is that the bound becomes operationally unacceptable (tens of seconds for an authentication operation), certification-expensive (the full network stack and error handling must be formally specified and tested), and is not deterministic in the embedded sense — it depends on external infrastructure state at runtime. A DER may correctly note that setting timeout = 5s and retries = 0 produces a technically bounded system. The correct response is: bounded is not the same as acceptable, bounded is not the same as operationally viable, and bounded is not the same as deterministic under safety-critical timing requirements.</li>
+            <li><strong>DO-178C requires failure mode analysis (FMEA).</strong> OCSP responder unavailability is a failure mode. Its consequence is either authentication failure (hard-fail) or security degradation (soft-fail). Both are unacceptable outcomes for safety-critical authentication that must be analyzed and accepted by the certification authority.</li>
+            <li><strong>Availability requirements conflict with security requirements.</strong> For systems with operational availability requirements (e.g., maintenance must be possible under connectivity-degraded conditions), hard-fail OCSP directly contradicts the availability requirement. This is not a configuration problem—it is a structural conflict between the revocation model and the operational environment.</li>
+        </ul>
+
+        <p>When you deploy runtime revocation in safety-critical systems, you force operational decisions that affect system availability and security integrity:</p>
+
+        <ul>
+            <li><strong>Hard-fail:</strong> OCSP unavailability → authentication blocked → potential operational disruption</li>
+            <li><strong>Soft-fail:</strong> OCSP unavailability → revocation bypassed → security property degraded</li>
+            <li><strong>Cached:</strong> Stale response window where revoked credentials remain operationally valid</li>
+        </ul>
+
+        <p><strong>No configuration of runtime revocation resolves this tradeoff under deterministic certification requirements.</strong> The modern mitigations (stapling, Must-Staple, local responders, short-lived certificates) each improve specific properties but preserve the fundamental CA-connectivity dependency that creates the tradeoff.</p>
+
+        <div class="callout callout-warning">
+            <strong>Revocation is a procedural event, not a runtime check.</strong><br><br>
+            Under the operational assumptions of bounded, pre-authorized safety-critical maintenance infrastructure: when compromise is detected → follow work order process → delete provisioned keys → record audit trail.<br><br>
+            No runtime network dependencies. No hard-fail/soft-fail dilemma. No certification conflict between availability and security. No attacker leverage through network interference.
+        </div>
+
+        <p><strong>Design security for operational reality and certification constraints, not protocol idealism.</strong></p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 4 - CAN Is Not Ethernet<br>
+            Why protocol assumptions about frame sizes, error handling, and state management don't transfer between network types. We'll examine fragmentation, per-frame integrity, and why "just use TLS" fails on message-oriented buses.</p>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
