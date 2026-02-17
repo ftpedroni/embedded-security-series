@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAN Is Not Ethernet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover { color: #444; }
+        .toc-link.toc-h3.active { color: #667eea; }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .comparison-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .comparison-card.bad li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: #E53E3E;
+            font-weight: 700;
+        }
+        .comparison-card.good li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38A169;
+            font-weight: 700;
+        }
+        .broadcast-visual {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 32px;
+            margin: 32px 0;
+            text-align: center;
+        }
+        .node {
+            display: inline-block;
+            background: white;
+            border: 2px solid #4299E1;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            line-height: 56px;
+            margin: 8px;
+            font-weight: 700;
+            position: relative;
+        }
+        .node.transmit {
+            background: #667eea;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .bus-line {
+            height: 4px;
+            background: #4299E1;
+            margin: 20px 0;
+            position: relative;
+        }
+        .wave {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            top: -8px;
+            animation: travel 2s infinite;
+        }
+        @keyframes travel {
+            0% { left: 0; opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        .stat-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 200px;
+        }
+        .stat-label {
+            font-size: 16px;
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .priority-demo {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        .priority-frame {
+            background: white;
+            border-left: 4px solid #4299E1;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .priority-high {
+            border-left-color: #E53E3E;
+            background: #FFF5F5;
+        }
+        .priority-id {
+            font-family: 'Monaco', monospace;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        code {
+            background: #F7FAFC;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 18px;
+            color: #E53E3E;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .visual-bar {
+            height: 60px;
+            background: linear-gradient(90deg, #E53E3E 0%, #FC8181 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 16px 0;
+        }
+        .visual-bar.good {
+            background: linear-gradient(90deg, #38A169 0%, #68D391 100%);
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .page-wrapper { flex-direction: column; gap: 0; padding: 20px; }
+            .toc-sidebar { display: none; }
+            .container { max-width: 100%; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            const tocLinks = document.querySelectorAll('.toc-link');
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                headings.forEach(heading => {
+                    if (scrollPosition >= heading.offsetTop) current = heading.id;
+                });
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC();
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+        </aside>
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 4 of 8</div>
+            <h1>CAN Is Not Ethernet</h1>
+            <div class="subtitle">Why protocol assumptions about frames, topology, and error handling don't transfer between network types</div>
+        </div>
+
+        <img src="images/04-hero-can-ethernet.svg" alt="CAN vs Ethernet architectural comparison" class="hero-image">
+
+        <p>A network engineer joins your embedded systems security review. They look at the CAN bus architecture and say: <strong>"We should just use standard Ethernet security practices here."</strong></p>
+
+        <p>It seems reasonable. Both move data. Both have frames. Both need security.</p>
+
+        <p><strong>But they're fundamentally different architectures.</strong></p>
+
+        <p>When you apply Ethernet assumptions to CAN—or any embedded field bus—you don't just get inefficiency. You get <strong>non-deterministic behavior that breaks certification.</strong></p>
+
+        <h2>Two Networks, Different Worlds</h2>
+
+        <p>CAN and Ethernet weren't designed for the same problems.</p>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>Ethernet Characteristics</h4>
+                <ul>
+                    <li>Modern switched fabric (operational unicast model)</li>
+                    <li>Dedicated point-to-point links per port</li>
+                    <li>Large frames (64-1,518 bytes)</li>
+                    <li>CSMA/CD in legacy shared media; eliminated in full-duplex switched</li>
+                    <li>Best-effort delivery</li>
+                    <li>Session-oriented security (TLS)</li>
+                </ul>
+                <p style="font-size: 14px; color: #718096; margin-top: 12px;"><em>Note: Ethernet retains L2 broadcast/multicast capability (ARP, discovery, etc.), but modern switched deployments operate primarily in a unicast point-to-point model for security purposes.</em></p>
+            </div>
+            <div class="comparison-card good">
+                <h4>CAN Characteristics</h4>
+                <ul>
+                    <li>Broadcast multi-drop bus</li>
+                    <li>All nodes see all frames</li>
+                    <li>Small frames (0-8 bytes)</li>
+                    <li>Priority-based arbitration</li>
+                    <li>Deterministic arbitration order (priority-defined bus access)</li>
+                    <li>Frame-level security required</li>
+                </ul>
+            </div>
+        </div>
+
+        <p>These aren't just implementation details. They're <strong>architectural differences</strong> that dictate how security must work.</p>
+
+        <h2>Broadcast vs Point-to-Point</h2>
+
+        <h3>Ethernet: Switched Unicast</h3>
+
+        <p>In modern Ethernet:</p>
+        <ul>
+            <li>Switches create dedicated paths between nodes</li>
+            <li>Frame goes from A → Switch → B only</li>
+            <li>Other nodes don't see the traffic</li>
+            <li>Security is end-to-end (A ↔ B)</li>
+        </ul>
+
+        <p><strong>Security implication:</strong> TLS works because it's a point-to-point protocol securing a point-to-point connection.</p>
+
+        <h3>CAN: Broadcast Bus</h3>
+
+        <div class="broadcast-visual">
+            <div style="font-weight: 700; margin-bottom: 16px;">CAN Bus: All Nodes See All Frames</div>
+            <div>
+                <div class="node transmit">A</div>
+                <div class="node">B</div>
+                <div class="node">C</div>
+                <div class="node">D</div>
+                <div class="node">E</div>
+            </div>
+            <div class="bus-line">
+                <div class="wave"></div>
+            </div>
+            <div style="font-size: 14px; color: #718096; margin-top: 16px;">
+                When node A transmits, all nodes B, C, D, E receive
+            </div>
+        </div>
+
+        <p>In CAN:</p>
+        <ul>
+            <li>Single shared bus (twisted pair)</li>
+            <li>All nodes physically connected</li>
+            <li>Every frame broadcast to everyone</li>
+            <li>Nodes filter by ID (acceptance masks)</li>
+        </ul>
+
+        <p><strong>Security implication:</strong> Ethernet-style point-to-point session encryption (as in TLS unicast sessions) doesn't apply. On CAN, all nodes see all frames. Encryption provides confidentiality but must account for broadcast visibility.</p>
+
+        <h3>What This Means for Security</h3>
+
+        <p><strong>Ethernet approach:</strong> Encrypt session between A and B. Other nodes don't see traffic.</p>
+
+        <p><strong>CAN reality:</strong></p>
+        <ul>
+            <li>All nodes see all frames (can't prevent)</li>
+            <li>Traffic analysis is inherent (IDs visible)</li>
+            <li>Frame content can be encrypted, but metadata is public</li>
+            <li>Need per-frame integrity, not session integrity</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>You can't hide CAN traffic.</strong> Security must assume all frames are visible to all nodes. Confidentiality of frame existence is generally infeasible on a broadcast bus. However, confidentiality of payload content may still be required depending on threat model—achieved through encryption while accepting that frame metadata (ID, timing, frequency) remains observable.
+        </div>
+
+        <h2>Priority Arbitration vs Collision Detection</h2>
+
+        <h3>Ethernet: CSMA/CD (Obsolete) or Switched (Modern)</h3>
+
+        <p><strong>Legacy Ethernet (10BASE-T half-duplex):</strong></p>
+        <ul>
+            <li>Carrier Sense: Listen before transmitting</li>
+            <li>Multiple Access: Multiple nodes share medium</li>
+            <li>Collision Detection: If two transmit simultaneously, both stop and retry</li>
+            <li><strong>Non-deterministic:</strong> Random backoff after collision</li>
+        </ul>
+
+        <p><strong>Modern Ethernet (100BASE-TX+ full-duplex):</strong></p>
+        <ul>
+            <li>Switched fabric eliminates collisions</li>
+            <li>Dedicated paths per connection</li>
+            <li>Still non-deterministic at higher layers (TCP backoff, switch buffering)</li>
+        </ul>
+
+        <h3>CAN: Priority-Based Arbitration</h3>
+
+        <p>CAN uses <strong>non-destructive bitwise arbitration</strong>:</p>
+
+        <div class="priority-demo">
+            <div style="font-weight: 700; margin-bottom: 16px;">Arbitration Example (Lower ID = Higher Priority)</div>
+            <div class="priority-frame priority-high">
+                <div>
+                    <div class="priority-id">ID: 0x100</div>
+                    <div style="font-size: 12px; color: #718096;">High priority (safety-critical)</div>
+                </div>
+                <div style="color: #E53E3E; font-weight: 700;">WINS</div>
+            </div>
+            <div class="priority-frame">
+                <div>
+                    <div class="priority-id">ID: 0x200</div>
+                    <div style="font-size: 12px; color: #718096;">Medium priority (control)</div>
+                </div>
+                <div style="color: #718096;">Waits</div>
+            </div>
+            <div class="priority-frame">
+                <div>
+                    <div class="priority-id">ID: 0x300</div>
+                    <div style="font-size: 12px; color: #718096;">Low priority (diagnostics)</div>
+                </div>
+                <div style="color: #718096;">Waits</div>
+            </div>
+        </div>
+
+        <p><strong>How it works:</strong></p>
+        <ol>
+            <li>Multiple nodes start transmitting simultaneously</li>
+            <li>Each transmits its ID bit-by-bit</li>
+            <li>CAN is dominant-low (0 beats 1)</li>
+            <li>Node with highest priority (lowest ID) wins automatically</li>
+            <li>Other nodes stop transmitting and wait</li>
+            <li><strong>No collision, no data loss, deterministic priority resolution</strong></li>
+        </ol>
+
+        <div class="stat-box">
+            <div>Deterministic</div>
+            <div class="stat-label">priority resolution (given simultaneous transmission attempts)</div>
+        </div>
+
+        <p style="font-size: 16px; color: #718096; margin: 16px 0;"><em>Note: Arbitration determines priority resolution deterministically. However, actual frame delivery latency depends on bus load and error-induced retry delays, which are bounded but variable within those bounds.</em></p>
+
+        <h3>Security Implications</h3>
+
+        <p><strong>Ethernet:</strong> Non-deterministic timing is acceptable. TCP handles retransmission. Session security works.</p>
+
+        <p><strong>CAN:</strong> Deterministic timing is mandatory. Arbitration is predictable. Security must preserve this property.</p>
+
+        <p><strong>What breaks:</strong></p>
+        <ul>
+            <li><strong>Random IDs:</strong> If security randomizes frame IDs, arbitration priority is destroyed</li>
+            <li><strong>Variable-length MACs:</strong> If MAC size varies, frame timing becomes unpredictable</li>
+            <li><strong>Session setup overhead:</strong> TLS handshake frames have unknown priority</li>
+        </ul>
+
+        <div class="callout callout-danger">
+            <strong>Any security mechanism that disrupts priority arbitration breaks real-time guarantees.</strong> Safety-critical systems depend on predictable frame delivery.
+        </div>
+
+        <h2>Frame Size: Fixed vs Variable</h2>
+
+        <h3>Ethernet Frame Structure</h3>
+
+        <pre>Ethernet Frame (64-1,518 bytes):
+┌──────────────┬──────────┬──────────────┬─────────────────┬──────┐
+│ Preamble (8) │ Dest (6) │ Source (6)   │ Payload (46-1500) │ CRC(4) │
+└──────────────┴──────────┴──────────────┴─────────────────┴──────┘
+
+Security approach:
+- Encrypt entire payload (46-1,500 bytes)
+- Add MAC/signature (16-32 bytes fits easily)
+- Encapsulate in TLS/IPsec (session-level)</pre>
+
+        <p><strong>Ethernet has room for security overhead.</strong> 1,500-byte payload → 16-byte MAC = 1.1% overhead.</p>
+
+        <h3>CAN Frame Structure</h3>
+
+        <pre>CAN Frame (0-8 bytes payload):
+┌────────┬─────────┬─────────────┬────────┐
+│ ID(11) │ DLC(4)  │ Data(0-64)  │ CRC(15)│
+└────────┴─────────┴─────────────┴────────┘
+
+Security challenge:
+- Only 8 bytes total payload
+- Want integrity protection (2-8 bytes MAC)
+- Want replay protection (2 bytes counter)
+- Leaves 0-4 bytes for actual data
+
+8-byte payload → 2-byte MAC + 2-byte counter = 50% overhead</pre>
+
+        <div class="callout callout-warning">
+            <strong>CAN has no room for security overhead.</strong> Every security byte costs payload capacity. Must optimize aggressively.
+        </div>
+
+        <h3>Design Implications</h3>
+
+        <p><strong>Ethernet approach (doesn't work on CAN):</strong></p>
+        <ul>
+            <li>Add 16-byte HMAC to every frame</li>
+            <li>Add 8-byte timestamp</li>
+            <li>Add 4-byte sequence number</li>
+            <li><strong>Total overhead: 28 bytes > 8-byte frame</strong></li>
+        </ul>
+
+        <p><strong>CAN-native approach:</strong></p>
+        <ul>
+            <li>2-byte truncated MAC (16-bit)</li>
+            <li>2-byte counter (65,536 frames before wrap)</li>
+            <li>4 bytes remaining for data</li>
+            <li><strong>Total: 50% payload efficiency, but it fits</strong></li>
+        </ul>
+
+        <h2>Error Handling: Best-Effort vs Guaranteed</h2>
+
+        <h3>Ethernet Error Handling</h3>
+
+        <p><strong>Physical layer:</strong></p>
+        <ul>
+            <li>CRC detects errors</li>
+            <li>Corrupted frames dropped silently</li>
+            <li>No automatic retransmission</li>
+        </ul>
+
+        <p><strong>Transport layer (TCP):</strong></p>
+        <ul>
+            <li>Detects missing frames (sequence numbers)</li>
+            <li>Requests retransmission (ACK/NACK)</li>
+            <li>Reorders out-of-sequence frames</li>
+            <li><strong>Non-deterministic: variable latency, timeout/retry logic</strong></li>
+        </ul>
+
+        <p><strong>Security layer (TLS):</strong></p>
+        <ul>
+            <li>Depends on TCP reliability</li>
+            <li>Lost frames = connection stall or timeout</li>
+            <li>Retry logic at application layer</li>
+        </ul>
+
+        <h3>CAN Error Handling</h3>
+
+        <p><strong>Built-in error detection:</strong></p>
+        <ul>
+            <li><strong>CRC (15-bit):</strong> Detects bit errors</li>
+            <li><strong>Frame check:</strong> Format errors detected</li>
+            <li><strong>ACK:</strong> All nodes acknowledge valid frames</li>
+            <li><strong>Bit monitoring:</strong> Transmitter verifies what it sent</li>
+            <li><strong>Stuff bit check:</strong> Prevents DC bias</li>
+        </ul>
+
+        <p><strong>Automatic retransmission:</strong></p>
+        <ul>
+            <li>If error detected, transmitter automatically retries</li>
+            <li>Hardware-level (no software intervention)</li>
+            <li>Governed by transmit/receive error counters and bus-off state machine</li>
+            <li><strong>Deterministic: hardware-enforced error confinement with bounded retry behavior</strong></li>
+        </ul>
+
+        <p style="font-size: 16px; color: #718096; margin: 16px 0;"><em>Technical note: CAN error confinement uses transmit and receive error counters (0-255) with state transitions (error-active, error-passive, bus-off). The system does not have a simple "N retry limit"—instead, persistent errors increment counters until the node enters bus-off state, isolating faulty nodes. This provides bounded, deterministic error handling.</em></p>
+
+        <div class="callout callout-success">
+            <strong>CAN provides deterministic error handling at the hardware level.</strong> No TCP-style timeout ambiguity. Frame either arrives successfully or the controller transitions through bounded error states (error-passive / bus-off), providing hardware-enforced failure handling without software-level retry ambiguity.
+        </div>
+
+        <h3>Security Implications</h3>
+
+        <p><strong>Ethernet + TLS:</strong> Missing frame = timeout → retry → unpredictable latency. Security depends on TCP's non-deterministic retry logic.</p>
+
+        <p><strong>CAN + Per-Frame Integrity:</strong> Missing frame = error detected → automatic retry → deterministic. Security doesn't add retry logic; CAN handles it.</p>
+
+        <pre>// Ethernet error handling (non-deterministic)
+class EthernetSecure {
+    send_protected(data) {
+        encrypted = encrypt(data)
+        tcp_send(encrypted)
+        
+        // Wait for ACK
+        ack = wait_for_ack(timeout: 5s)  // Variable timing
+        if ack == null:
+            retry_count += 1
+            if retry_count < 3:
+                send_protected(data)  // Recursive retry
+            else:
+                raise TimeoutError()
+    }
+}
+
+// CAN error handling (deterministic)
+class CANSecure {
+    send_protected(frame_id, data) {
+        // Add integrity
+        counter = this.tx_counter++
+        mac = compute_mac(frame_id, counter, data)
+        
+        frame = pack(counter, data, mac)
+        
+        // Send - CAN hardware handles retries
+        can_send(frame_id, frame)
+        
+        // No application-level retry needed
+        // CAN controller retries up to 16× automatically
+        // Either succeeds or error_passive flag set
+    }
+}</pre>
+
+        <h2>The CAN-Native Security Pattern</h2>
+
+        <p>Stop trying to port Ethernet security to CAN. Design for CAN's actual properties.</p>
+
+        <h3>Core Principles</h3>
+
+        <ol>
+            <li><strong>Per-frame integrity, not session:</strong> Each frame self-contained</li>
+            <li><strong>Preserve priority arbitration:</strong> Don't randomize IDs</li>
+            <li><strong>Minimize overhead:</strong> Use truncated MACs (2 bytes)</li>
+            <li><strong>Leverage CAN error handling:</strong> Don't add retry logic</li>
+            <li><strong>Accept broadcast visibility:</strong> Don't try to hide traffic</li>
+        </ol>
+
+        <h3>Implementation</h3>
+
+        <pre>// CAN-native secure frame structure
+struct CANSecureFrame {
+    // Standard CAN fields (hardware)
+    id: u11              // 11-bit identifier (priority)
+    dlc: u4              // Data length code (0-8)
+    
+    // Secure payload (8 bytes total)
+    counter: u16         // Replay protection (2 bytes)
+    data: [u8; 4]       // Actual payload (4 bytes)
+    mac: u16            // Truncated HMAC (2 bytes)
+}
+
+class CANSecureChannel {
+    session_key: [u8; 32]
+    tx_counter: u16 = 0
+    rx_counter: u16 = 0
+    
+    send_protected(frame_id, data) {
+        assert(len(data) <= 4)  // CAN constraint
+        
+        // Increment counter
+        counter = this.tx_counter
+        this.tx_counter += 1
+        
+        // Compute MAC
+        message = pack_le(frame_id, counter, data)
+        mac_full = hmac_sha256(this.session_key, message)
+        mac_trunc = mac_full[0:2]  // 16 bits
+        
+        // Assemble frame
+        payload = pack(">H", counter) + data + mac_trunc
+        
+        // Send (CAN hardware handles transmission)
+        can_send(frame_id, payload)
+    }
+    
+    receive_protected(frame_id, payload) {
+        // Unpack
+        counter = unpack(">H", payload[0:2])
+        data = payload[2:6]
+        mac_received = payload[6:8]
+        
+        // Replay protection
+        if counter <= this.rx_counter:
+            raise ReplayError(f"Counter {counter} <= {this.rx_counter}")
+        
+        // Counter wrap handling
+        // Note: 16-bit counter wraps at 65,536 frames.
+        // Options for wrap handling in certification context:
+        // 1. Session re-key before wrap (provision max_frames < 65536)
+        // 2. Sliding window with wrap-around arithmetic (adds state complexity)
+        // 3. Explicit wrap synchronization protocol
+        //
+        // Additional considerations for production systems:
+        // - Multi-sender channels: Counters must be scoped per sender identity
+        // - Out-of-order delivery: Strict monotonic check breaks legitimate frame interleaving
+        // - Power cycle recovery: Counter state persistence or reset synchronization required
+        // - Counter desync: Recovery mechanism needed (e.g., authenticated reset)
+        //
+        // Production systems must define wrap behavior, sender scoping, and reset
+        // synchronization strategy explicitly for DO-178C compliance.
+        
+        // Verify MAC
+        message = pack_le(frame_id, counter, data)
+        mac_full = hmac_sha256(this.session_key, message)
+        mac_expected = mac_full[0:2]
+        
+        if not constant_time_compare(mac_received, mac_expected):
+            raise IntegrityError("MAC mismatch")
+        
+        // Accept frame
+        this.rx_counter = counter
+        return data
+    }
+}</pre>
+
+        <h3>Properties Achieved</h3>
+
+        <ul>
+            <li><strong>Integrity:</strong> 16-bit MAC (discussed below with threat model constraints)</li>
+            <li><strong>Replay protection:</strong> Monotonic counter, 65,536 frames before wrap (see wrap handling note)</li>
+            <li><strong>Deterministic:</strong> No retry logic, no timeouts, bounded execution</li>
+            <li><strong>Priority preserved:</strong> CAN ID unchanged, arbitration works</li>
+            <li><strong>Minimal overhead:</strong> 4 bytes data + 4 bytes security = 50% efficiency</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Security Analysis: 16-bit MAC Truncation</strong><br><br>
+            <strong>Threat Model Assumptions:</strong><br>
+            The 16-bit (2-byte) MAC truncation is appropriate <strong>only under the following constraints</strong>:<br><br>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px;">
+                <li><strong>Physical access control:</strong> CAN bus access requires physical proximity to the vehicle/aircraft. Attacker must have physical access to inject frames.</li>
+                <li><strong>Rate limiting:</strong> CAN bus bandwidth (125 Kbps - 1 Mbps) inherently limits injection rate. At 1 Mbps with 8-byte frames, maximum injection rate is ~10,000 frames/sec.</li>
+                <li><strong>Intrusion detection:</strong> Anomalous frame injection (repeated authentication failures, invalid counters) is logged and triggers alerts.</li>
+                <li><strong>Bounded attack window:</strong> Physical access is time-limited (maintenance session duration). Attack window is minutes to hours, not indefinite.</li>
+                <li><strong>Session-specific keys:</strong> Keys are provisioned per-session or per-vehicle-tool pair, limiting the value of a successful forgery.</li>
+            </ul><br>
+            <strong>Security Properties:</strong><br>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>Collision probability: 1 in 65,536 per frame</li>
+                <li>Brute force attacks are feasible without rate limiting and intrusion detection</li>
+                <li>With IDS detecting repeated failures: Attack becomes observable</li>
+            </ul><br>
+            <strong>Risks NOT Mitigated:</strong><br>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>An adversary with sustained bus access and no rate limiting can brute-force authentication</li>
+                <li>Without IDS, 16-bit MACs provide weak protection against determined attackers</li>
+                <li>This is NOT appropriate for untrusted or internet-exposed networks</li>
+            </ul><br>
+            <strong>Recommendation:</strong> For production systems, evaluate 32-bit or 64-bit MACs if frame size permits. The 16-bit example demonstrates the architecture, not a universal security recommendation. NIST SP 800-107 recommends minimum 64-bit MAC tags for general use.
+        </div>
+
+        <h2>Comparison: Ethernet vs CAN Security</h2>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Ethernet-style Security on CAN</p>
+            <div class="visual-bar" style="width: 100%;">
+                Non-deterministic | Breaks priorities | Doesn't fit
+            </div>
+        </div>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">CAN-Native Security</p>
+            <div class="visual-bar good" style="width: 8%; min-width: 8px;">&nbsp;</div>
+            <p style="font-size: 16px; color: #38A169; font-weight: 600; margin-top: 8px; margin-bottom: 0;">
+                Deterministic &nbsp;|&nbsp; Preserves arbitration &nbsp;|&nbsp; Fits in 8 bytes
+            </p>
+        </div>
+
+        <div class="callout callout-success">
+            <strong>CAN-native security:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li>Per-frame integrity (not session)</li>
+                <li>Preserves priority arbitration</li>
+                <li>Leverages CAN error handling</li>
+                <li>Minimal overhead (50%)</li>
+                <li>Deterministic behavior</li>
+                <li>Amenable to WCET analysis (bounded HMAC execution, constant-time operations, no dynamic allocation)</li>
+            </ul>
+        </div>
+
+        <h2>Beyond CAN: The General Pattern</h2>
+
+        <p>This applies to all embedded buses that differ from Ethernet:</p>
+
+        <h3>FlexRay</h3>
+        <ul>
+            <li><strong>Difference:</strong> Time-triggered, not event-driven</li>
+            <li><strong>Security implication:</strong> Must fit in static slot schedule</li>
+            <li><strong>Pattern:</strong> Pre-allocated security overhead in slot design</li>
+        </ul>
+
+        <h3>LIN</h3>
+        <ul>
+            <li><strong>Difference:</strong> Master-slave, 8-byte frames like CAN</li>
+            <li><strong>Security implication:</strong> Master schedules all traffic</li>
+            <li><strong>Pattern:</strong> Per-frame MAC with master-enforced counter</li>
+        </ul>
+
+        <h3>ARINC 429</h3>
+        <ul>
+            <li><strong>Difference:</strong> 32-bit words, one transmitter per bus</li>
+            <li><strong>Security implication:</strong> 4-byte total payload</li>
+            <li><strong>Pattern:</strong> 2-byte data + 2-byte MAC = 50% overhead</li>
+        </ul>
+
+        <h2>When Ethernet Security Works</h2>
+
+        <p>To be fair: Ethernet security patterns work when you actually have Ethernet.</p>
+
+        <p><strong>Use Ethernet-style security when:</strong></p>
+        <ol>
+            <li><strong>Transport is Ethernet or IP-based</strong> (switched fabric, not broadcast)</li>
+            <li><strong>Large frames available</strong> (64-1,500 bytes)</li>
+            <li><strong>Non-deterministic timing acceptable</strong> (TCP retry, TLS handshake)</li>
+            <li><strong>Point-to-point sessions</strong> (not broadcast)</li>
+            <li><strong>Session overhead acceptable</strong> (TLS handshake cost OK)</li>
+        </ol>
+
+        <p style="font-size: 16px; color: #718096; margin: 24px 0;"><em>Note: Time-Sensitive Networking (TSN) introduces deterministic timing to Ethernet through time-aware scheduling and traffic shaping. However, TSN does not change the fundamental architectural differences in frame size constraints, broadcast vs switched topology, and session-oriented security overhead that this article addresses.</em></p>
+
+        <p><strong>Don't use Ethernet-style security when:</strong></p>
+        <ol>
+            <li><strong>Transport is broadcast bus</strong> (CAN, LIN, ARINC 429)</li>
+            <li><strong>Frames are small</strong> (&lt;64 bytes)</li>
+            <li><strong>Deterministic timing required</strong> (safety-critical)</li>
+            <li><strong>Priority arbitration matters</strong> (real-time guarantees)</li>
+            <li><strong>Hardware error handling present</strong> (CAN automatic retry)</li>
+        </ol>
+
+        <h2>Conclusion: Match Security to Network Architecture</h2>
+
+        <p>The title is "CAN Is Not Ethernet."</p>
+
+        <p>Not because CAN is inferior. Because <strong>CAN and Ethernet solve different problems with different architectures.</strong></p>
+
+        <p>When you apply Ethernet security assumptions to CAN:</p>
+        <ul>
+            <li><strong>Session-oriented security</strong> doesn't fit broadcast bus</li>
+            <li><strong>Large security overhead</strong> doesn't fit 8-byte frames</li>
+            <li><strong>Non-deterministic retry</strong> doesn't fit real-time requirements</li>
+            <li><strong>Priority ignorance</strong> breaks deterministic arbitration</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Network architecture dictates security architecture.</strong><br><br>
+            Broadcast → per-frame integrity<br>
+            Small frames → minimal overhead<br>
+            Priority arbitration → preserve IDs<br>
+            Hardware retry → leverage it, don't duplicate
+        </div>
+
+        <p><strong>Design security for the network you have, not the network you wish you had.</strong></p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 5 - Deterministic Failure Is a Security Requirement<br>
+            Why DO-326A compliance means explicit failure modes, not ambiguous errors. We'll examine WCET analysis, failure mode documentation, and why "it depends" isn't acceptable in safety-critical security.</p>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
