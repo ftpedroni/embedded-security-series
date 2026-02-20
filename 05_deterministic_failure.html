@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deterministic Failure Is a Security Requirement</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover { color: #444; }
+        .toc-link.toc-h3.active { color: #667eea; }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .comparison-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .comparison-card.bad li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: #E53E3E;
+            font-weight: 700;
+        }
+        .comparison-card.good li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38A169;
+            font-weight: 700;
+        }
+        .error-matrix {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        .error-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 3fr;
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #4299E1;
+            gap: 16px;
+            align-items: center;
+        }
+        .error-bad {
+            border-left-color: #E53E3E;
+            background: #FFF5F5;
+        }
+        .error-good {
+            border-left-color: #38A169;
+            background: #F0FFF4;
+        }
+        .error-code {
+            font-family: 'Monaco', monospace;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .stat-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 8px;
+            margin: 24px 0;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            min-width: 200px;
+        }
+        .stat-label {
+            font-size: 16px;
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .timing-diagram {
+            background: #F7FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        .timing-bar {
+            height: 40px;
+            background: linear-gradient(90deg, #4299E1 0%, #667eea 100%);
+            border-radius: 4px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            position: relative;
+        }
+        .timing-uncertain {
+            background: repeating-linear-gradient(
+                45deg,
+                #FC8181,
+                #FC8181 10px,
+                #FEB2B2 10px,
+                #FEB2B2 20px
+            );
+        }
+        .timing-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+        code {
+            background: #F7FAFC;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 18px;
+            color: #E53E3E;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .visual-bar {
+            height: 60px;
+            background: linear-gradient(90deg, #E53E3E 0%, #FC8181 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 16px 0;
+        }
+        .visual-bar.good {
+            background: linear-gradient(90deg, #38A169 0%, #68D391 100%);
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .error-row { grid-template-columns: 1fr; }
+            .page-wrapper { flex-direction: column; gap: 0; padding: 20px; }
+            .toc-sidebar { display: none; }
+            .container { max-width: 100%; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            const tocLinks = document.querySelectorAll('.toc-link');
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                headings.forEach(heading => {
+                    if (scrollPosition >= heading.offsetTop) current = heading.id;
+                });
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC();
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+        </aside>
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 5 of 8</div>
+            <h1>Deterministic Failure Is a Security Requirement</h1>
+            <div class="subtitle">Why DO-326A compliance means explicit failure modes, not ambiguous errors</div>
+        </div>
+
+        <img src="images/05-hero-deterministic-failure.svg" alt="Deterministic vs Non-Deterministic Failure Modes" class="hero-image">
+
+        <p>Your DER (Designated Engineering Representative) is reviewing your security implementation. They ask: <strong>"What happens when authentication times out?"</strong></p>
+
+        <p>Your developer answers: <strong>"It depends. Sometimes we retry, sometimes we fail. It varies based on network conditions."</strong></p>
+
+        <p>The DER marks this as a <strong>finding: Non-deterministic failure behavior.</strong></p>
+
+        <p>"It depends" isn't acceptable in safety-critical systems. <strong>Every failure must be explicit, documented, and predictable.</strong></p>
+
+        <div class="callout callout-warning">
+            <strong>Certification Principle:</strong> The requirement is not determinism for its own sake—it's <strong>analyzable, bounded failure behavior</strong>. Certification demands that failure modes can be analyzed (FMEA), bounded (WCET), reproduced (testing), and traced (requirements verification). Determinism is the mechanism. Analyzability is the goal.
+        </div>
+
+        <h2>The DO-326A Requirement</h2>
+
+        <p>DO-326A (Airworthiness Security Process Specification) doesn't just require security. It requires <strong>certifiable security.</strong></p>
+
+        <p><strong>In a certifiable DO-326A process, security functions must have defined, analyzable failure behavior:</strong></p>
+
+        <div class="callout">
+            Security functions require explicit failure modes with documented behavior. Ambiguous or non-deterministic failures that could affect safety-related functionality must be analyzed, bounded, and explicitly defined in the security assessment.
+        </div>
+
+        <p><strong>What this means in practice:</strong></p>
+
+        <ul>
+            <li>Every security operation has a <strong>bounded execution time</strong></li>
+            <li>Every failure has an <strong>explicit error code</strong></li>
+            <li>Every error code has <strong>documented system response</strong></li>
+            <li>Every response is <strong>testable and verifiable</strong></li>
+        </ul>
+
+        <h2>Ambiguous vs Explicit Failures</h2>
+
+        <h3>The Problem with "It Depends"</h3>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>❌ Ambiguous Failure</h4>
+                <ul>
+                    <li>"Timeout occurred"</li>
+                    <li>"Network error"</li>
+                    <li>"Authentication failed"</li>
+                    <li>"Try again later"</li>
+                    <li>"Unknown error"</li>
+                </ul>
+            </div>
+            <div class="comparison-card good">
+                <h4>✓ Explicit Failure</h4>
+                <ul>
+                    <li>AUTH_TIMEOUT_EXPIRED (5s)</li>
+                    <li>HMAC_VERIFICATION_FAILED</li>
+                    <li>COUNTER_REPLAY_DETECTED</li>
+                    <li>KEY_NOT_PROVISIONED</li>
+                    <li>TPM_COMMUNICATION_ERROR</li>
+                </ul>
+            </div>
+        </div>
+
+        <p><strong>Why ambiguous failures fail certification:</strong></p>
+
+        <ol>
+            <li><strong>Untestable:</strong> "Network error" could be 50 different conditions</li>
+            <li><strong>Non-reproducible:</strong> "Sometimes we retry" means behavior depends on state</li>
+            <li><strong>Non-deterministic:</strong> "It varies" means timing is unpredictable</li>
+            <li><strong>Unsafe:</strong> Can't prove correct behavior in FMEA</li>
+        </ol>
+
+        <h3>Example: Authentication Timeout</h3>
+
+        <p><strong>Ambiguous implementation (unbounded and unanalyzable):</strong></p>
+
+        <pre>// ❌ BAD: Non-deterministic behavior
+def authenticate():
+    start = time.now()
+    
+    while True:
+        try:
+            response = wait_for_response(timeout=5.0)
+            if response:
+                return verify(response)
+        except Timeout:
+            # What happens here? "It depends"
+            if time.now() - start < 30:
+                continue  // Retry (but how many times?)
+            else:
+                return None  // Give up (but why 30s?)
+        except NetworkError as e:
+            # Log and... do what?
+            log(f"Error: {e}")
+            # Sometimes retry? Sometimes fail?
+            if random() < 0.5:  // ← Illustrates non-deterministic retry heuristics
+                continue
+            else:
+                return None</pre>
+
+        <div class="callout callout-danger">
+            <strong>Problems:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li>Unbounded loop (while True)</li>
+                <li>Variable timeout (5s, 30s, ∞?)</li>
+                <li>Ambiguous retry logic ("sometimes")</li>
+                <li>Random behavior (literally random!)</li>
+                <li>Generic error handling (catch-all)</li>
+            </ul>
+        </div>
+
+        <p><strong>Explicit implementation (certifiable):</strong></p>
+
+        <pre>// ✓ GOOD: Deterministic, explicit
+class AuthenticationError(Enum):
+    AUTH_SUCCESS = 0
+    AUTH_TIMEOUT_CHALLENGE = 1   // Challenge not sent within 1s
+    AUTH_TIMEOUT_RESPONSE = 2    // Response not received within 2s
+    AUTH_HMAC_INVALID = 3        // HMAC verification failed
+    AUTH_COUNTER_REPLAY = 4      // Counter <= last valid
+    AUTH_KEY_NOT_FOUND = 5       // K_AG key not in TPM
+    AUTH_TPM_ERROR = 6           // TPM communication failure
+
+def authenticate():
+    # WCET: 3.1 seconds maximum
+    # Failure mode: Returns explicit error code
+    
+    start = time.monotonic()
+    
+    # Step 1: Send challenge (WCET: 100ms)
+    try:
+        send_challenge(nonce_G)
+    except TransmissionError:
+        return AUTH_TIMEOUT_CHALLENGE
+    
+    # Step 2: Wait for response (bounded: 2s)
+    try:
+        response = receive_with_timeout(2.0)
+    except TimeoutError:
+        # Explicit: No retry, clear failure
+        return AUTH_TIMEOUT_RESPONSE
+    
+    # Step 3: Verify HMAC (WCET: 5ms)
+    expected_hmac = compute_hmac(K_AG, nonce_G || response.nonce)
+    if not constant_time_compare(response.hmac, expected_hmac):
+        return AUTH_HMAC_INVALID
+    
+    # Step 4: Check counter (WCET: 1ms)
+    if response.counter <= self.last_valid_counter:
+        return AUTH_COUNTER_REPLAY
+    
+    # Success
+    self.last_valid_counter = response.counter
+    
+    elapsed = time.monotonic() - start
+    assert elapsed < 3.1  // Verify WCET bound
+    
+    return AUTH_SUCCESS</pre>
+
+        <p style="font-size: 16px; color: #718096; margin: 16px 0;"><em>Note: In production certified code, runtime assertions are insufficient for WCET enforcement. WCET bounds must be verified through static analysis tools (e.g., aiT, Bound-T), measured validation on target hardware, watchdog timer cutoffs, and formal timing analysis as part of DO-178C verification.</em></p>
+
+        <div class="callout callout-success">
+            <strong>Properties:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li>Bounded execution (≤3.1s WCET)</li>
+                <li>Explicit error codes (7 states)</li>
+                <li>No retry logic (fail fast)</li>
+                <li>Deterministic failure classification (given the same observable condition, the same failure code and response occur)</li>
+                <li>Testable (can force each error condition)</li>
+            </ul>
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>WCET Qualification:</strong> True WCET bounds require comprehensive analysis beyond application-level timeouts. This includes: RTOS scheduling analysis (priority inversion, blocking times), interrupt latency (maximum ISR execution time), cryptographic worst-case (HMAC/verification with maximum key size), and bus arbitration worst-case (CAN priority delays, network retransmission bounds). A network timeout alone does not constitute a certified WCET bound unless the entire execution path—including lower-layer protocol stack, scheduler behavior, and hardware timer enforcement—is analyzed and bounded.
+        </div>
+
+        <h2>Worst-Case Execution Time (WCET)</h2>
+
+        <p>In a certifiable system, security operations that affect safety-related functions must be included in system-level timing analysis. This requirement derives from DO-178C (software WCET), ARP4754A (system timing budgets), and ARP4761 (hazard analysis), with DO-326A requiring that security-related timing constraints be identified and verified as part of the security assessment process.</p>
+
+        <h3>Why WCET Matters</h3>
+
+        <p>In safety-critical systems:</p>
+        <ul>
+            <li>Authentication must complete before operation window closes</li>
+            <li>Timeout handling must not block safety-critical tasks</li>
+            <li>Security can't starve real-time processes</li>
+        </ul>
+
+        <p><strong>Example: Ground maintenance window</strong></p>
+
+        <div class="timing-diagram">
+            <div style="font-weight: 700; margin-bottom: 16px;">Maintenance Operation Timeline</div>
+            
+            <div class="timing-bar">
+                Connect (1s)
+            </div>
+            <div class="timing-label">Physical connection established</div>
+            
+            <div class="timing-bar">
+                Authenticate (3s max)
+            </div>
+            <div class="timing-label">WCET guarantee: ≤3.1s</div>
+            
+            <div class="timing-bar" style="background: linear-gradient(90deg, #38A169 0%, #68D391 100%);">
+                Download logs (5s)
+            </div>
+            <div class="timing-label">Data transfer</div>
+            
+            <div class="timing-bar" style="background: linear-gradient(90deg, #38A169 0%, #68D391 100%);">
+                Upload patch (3s)
+            </div>
+            <div class="timing-label">Software update</div>
+            
+            <div class="timing-bar">
+                Disconnect (1s)
+            </div>
+            <div class="timing-label">Total: 13s / 15s budget</div>
+        </div>
+
+        <p><strong>If authentication is non-deterministic:</strong></p>
+
+        <div class="timing-diagram">
+            <div class="timing-bar timing-uncertain">
+                Authenticate (??? seconds)
+            </div>
+            <div class="timing-label">Might be 3s... might be 30s... might timeout...</div>
+            
+            <div style="margin-top: 16px; padding: 12px; background: #FFF5F5; border-radius: 4px; color: #E53E3E; font-weight: 600;">
+                Result: Operation exceeds 15s budget → Aircraft not ready for next flight
+            </div>
+        </div>
+
+        <div class="stat-box">
+            <div>3.1s</div>
+            <div class="stat-label">authentication WCET guarantee</div>
+        </div>
+
+        <h3>Computing WCET</h3>
+
+        <p><strong>For each operation, document:</strong></p>
+
+        <ol>
+            <li><strong>Best-case time (BCET):</strong> Minimum execution path</li>
+            <li><strong>Average-case time (ACET):</strong> Typical execution</li>
+            <li><strong>Worst-case time (WCET):</strong> Maximum bound</li>
+        </ol>
+
+        <pre>// WCET analysis example
+class AuthOperation {
+    operation: String
+    bcet_ms: f64      // Best case
+    acet_ms: f64      // Average case
+    wcet_ms: f64      // Worst case
+}
+
+auth_wcet_breakdown = [
+    AuthOperation {
+        operation: "send_challenge",
+        bcet_ms: 0.5,
+        acet_ms: 1.0,
+        wcet_ms: 100.0    // Network transmission
+    },
+    AuthOperation {
+        operation: "receive_response",
+        bcet_ms: 0.5,
+        acet_ms: 10.0,
+        wcet_ms: 2000.0   // Timeout bound
+    },
+    AuthOperation {
+        operation: "compute_hmac",
+        bcet_ms: 3.0,
+        acet_ms: 4.0,
+        wcet_ms: 5.0      // CPU-bound
+    },
+    AuthOperation {
+        operation: "compare_hmac",
+        bcet_ms: 0.1,
+        acet_ms: 0.1,
+        wcet_ms: 1.0      // Constant-time compare
+    },
+    AuthOperation {
+        operation: "check_counter",
+        bcet_ms: 0.1,
+        acet_ms: 0.1,
+        wcet_ms: 1.0      // Integer comparison
+    },
+]
+
+// Total WCET: 100 + 2000 + 5 + 1 + 1 = 2,107 ms = 2.1 seconds
+// Add 1s margin for overhead → WCET budget: 3.1 seconds</pre>
+
+        <h2>Error Code Design</h2>
+
+        <p>Every failure needs an <strong>explicit error code</strong> with <strong>documented system response.</strong></p>
+
+        <h3>The Error Matrix</h3>
+
+        <div class="error-matrix">
+            <div style="font-weight: 700; margin-bottom: 16px;">Authentication Error Matrix</div>
+            
+            <div class="error-row error-good">
+                <div class="error-code">0x00 SUCCESS</div>
+                <div style="color: #38A169; font-weight: 700;">Continue</div>
+                <div style="font-size: 14px;">Authentication succeeded, proceed with operation</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x01 TIMEOUT_CHALLENGE</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">Challenge not sent in 1s → log, retry connection</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x02 TIMEOUT_RESPONSE</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">No response in 2s → log, check peer status</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x03 HMAC_INVALID</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">Authentication failed → log security event, do NOT retry</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x04 COUNTER_REPLAY</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">Replay detected → log security event, possible attack</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x05 KEY_NOT_FOUND</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">K_AG not in TPM → device not provisioned or revoked</div>
+            </div>
+            
+            <div class="error-row error-bad">
+                <div class="error-code">0x06 TPM_ERROR</div>
+                <div style="color: #E53E3E; font-weight: 700;">Abort</div>
+                <div style="font-size: 14px;">TPM communication failed → hardware fault, check logs</div>
+            </div>
+        </div>
+
+        <p><strong>Each error code includes:</strong></p>
+        <ul>
+            <li><strong>Unique identifier:</strong> 0x00-0x06 (no ambiguity)</li>
+            <li><strong>System action:</strong> Continue or Abort (deterministic)</li>
+            <li><strong>Operator guidance:</strong> What to do next</li>
+            <li><strong>Logging requirement:</strong> Security event or operational</li>
+            <li><strong>Retry policy:</strong> Explicitly defined and bounded (silent retry loops are not acceptable)</li>
+        </ul>
+
+        <h3>Implementation</h3>
+
+        <pre>// Error handling with explicit codes
+class Authenticator {
+    authenticate() -> AuthResult {
+        start = time.monotonic()
+        
+        // Each step returns explicit error
+        result = self.send_challenge()
+        if result != AUTH_SUCCESS:
+            self.log_error(result)
+            return result
+        
+        result = self.receive_response()
+        if result != AUTH_SUCCESS:
+            self.log_error(result)
+            return result
+        
+        result = self.verify_hmac()
+        if result != AUTH_SUCCESS:
+            self.log_security_event(result)  // Security failure
+            return result
+        
+        result = self.check_counter()
+        if result != AUTH_SUCCESS:
+            self.log_security_event(result)  // Replay attack
+            return result
+        
+        elapsed = time.monotonic() - start
+        assert elapsed < 3.1  // WCET verification
+        
+        return AUTH_SUCCESS
+    }
+    
+    log_error(error: AuthError) {
+        // Operational error (network, timeout)
+        audit_log.record({
+            event: "AUTH_ERROR",
+            error_code: error.code,
+            error_name: error.name,
+            timestamp: utc_now(),
+            aircraft_sn: self.aircraft_id,
+            ground_tool: self.ground_id
+        })
+    }
+    
+    log_security_event(error: AuthError) {
+        // Security failure (HMAC, replay)
+        security_log.record({
+            event: "AUTH_SECURITY_FAILURE",
+            error_code: error.code,
+            error_name: error.name,
+            timestamp: utc_now(),
+            aircraft_sn: self.aircraft_id,
+            ground_tool: self.ground_id,
+            severity: "HIGH",
+            action_required: "INVESTIGATE"
+        })
+        
+        // Do NOT retry on security failure
+        // This could be an attack in progress
+    }
+}</pre>
+
+        <h2>Failure Mode Documentation</h2>
+
+        <p>DO-326A requires <strong>FMEA (Failure Mode and Effects Analysis)</strong> for security functions.</p>
+
+        <h3>FMEA Entry Example</h3>
+
+        <div class="callout">
+            <strong>Function:</strong> Authentication<br>
+            <strong>Failure Mode:</strong> HMAC verification fails (0x03)<br>
+            <strong>Cause:</strong> Wrong key, tampered data, or implementation error<br>
+            <strong>Effect on System:</strong> Authentication aborted, operation blocked<br>
+            <strong>Severity:</strong> High (security compromise possible)<br>
+            <strong>Safety Impact Assessment:</strong> No direct flight hazard / Potential dispatch delay (ARP4761 linkage)<br>
+            <strong>Detection:</strong> Logged as security event<br>
+            <strong>Mitigation:</strong> No automatic retry, manual investigation required<br>
+            <strong>Verification:</strong> Test case AUTH_TC_005 forces this condition
+        </div>
+
+        <p><strong>Every error code needs an FMEA entry.</strong> This documents:</p>
+
+        <ol>
+            <li><strong>What failed:</strong> Specific component/operation</li>
+            <li><strong>Why it failed:</strong> Root cause</li>
+            <li><strong>What happens next:</strong> System response</li>
+            <li><strong>How bad is it:</strong> Safety/security impact</li>
+            <li><strong>How do we detect it:</strong> Monitoring/logging</li>
+            <li><strong>How do we handle it:</strong> Mitigation strategy</li>
+            <li><strong>How do we test it:</strong> Test case reference</li>
+        </ol>
+
+        <h2>Comparison: Ambiguous vs Deterministic</h2>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Ambiguous Failure Handling</p>
+            <div class="visual-bar" style="width: 100%;">
+                "It depends" | Retry sometimes | Unknown timing
+            </div>
+        </div>
+
+        <div style="margin: 48px 0;">
+            <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Deterministic Failure Handling</p>
+            <div class="visual-bar good" style="width: 12%;">
+                Explicit codes | No ambiguity | WCET bounded
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <strong>Deterministic failure properties:</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 12px; margin-bottom: 0;">
+                <li>Explicit error codes (not "network error")</li>
+                <li>Bounded execution time (WCET guarantee)</li>
+                <li>Documented system response (FMEA entries)</li>
+                <li>No retry ambiguity (fail fast)</li>
+                <li>Testable (can force each condition)</li>
+                <li>Certifiable (meets DO-326A requirements)</li>
+            </ul>
+        </div>
+
+        <h2>When Non-Determinism Is Acceptable</h2>
+
+        <p>To be clear: non-deterministic behavior works in specific contexts.</p>
+
+        <p><strong>Use "it depends" / retry logic when:</strong></p>
+        <ol>
+            <li><strong>Not safety-critical:</strong> Failures don't affect safety</li>
+            <li><strong>Best-effort acceptable:</strong> Graceful degradation OK</li>
+            <li><strong>No certification required:</strong> Commercial software, web services</li>
+            <li><strong>User can intervene:</strong> "Retry" button available</li>
+        </ol>
+
+        <p><strong>Don't use "it depends" when:</strong></p>
+        <ol>
+            <li><strong>Safety-critical system:</strong> DO-178C/DO-326A certification</li>
+            <li><strong>Real-time constraints:</strong> Operations have time budgets</li>
+            <li><strong>Security failure:</strong> HMAC mismatch, replay detected</li>
+            <li><strong>Autonomous operation:</strong> No human in the loop</li>
+        </ol>
+
+        <h2>Conclusion: Explicit Is Certifiable</h2>
+
+        <p>The title is "Deterministic Failure Is a Security Requirement."</p>
+
+        <p>More precisely: <strong>Analyzable, bounded failure behavior is a certification requirement.</strong> Determinism is how we achieve it.</p>
+
+        <p>Not because determinism is theoretically better. Because certification demands that failure modes can be analyzed (FMEA), bounded (WCET), reproduced (testing), and traced (requirements verification).</p>
+
+        <p>When security operations fail ambiguously:</p>
+        <ul>
+            <li><strong>"It depends"</strong> → Can't write FMEA entry</li>
+            <li><strong>"Sometimes retry"</strong> → Can't compute WCET</li>
+            <li><strong>"Network error"</strong> → Can't test all paths</li>
+            <li><strong>"Try again"</strong> → Can't predict behavior</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Every security failure must be explicit.</strong><br><br>
+            Unique error code → Documented response → FMEA entry → Test case<br><br>
+            No ambiguity. No "it depends." No retry guessing.
+        </div>
+
+        <p><strong>Design security operations with deterministic failure from day one.</strong></p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 6 - PKI Belongs in Provisioning, Not Runtime<br>
+            Deep dive into the two-phase architecture. We'll examine key hierarchy (Root → Device → Pairwise → Session), factory provisioning process, and MRO key rotation procedures.</p>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
