@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Title -->
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    Deterministic Failure Is a Requirement
+  </text>
+  <text x="600" y="95" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    DO-326A: Explicit Error Codes vs "It Depends"
+  </text>
+
+  <!-- Left: Bad (ambiguous) -->
+  <g id="ambiguous">
+    <text x="230" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      ❌ "It depends..."
+    </text>
+    
+    <rect x="80" y="180" width="300" height="350" rx="12" fill="rgba(229, 62, 62, 0.3)" stroke="#E53E3E" stroke-width="3"/>
+    
+    <!-- Single generic error -->
+    <rect x="120" y="210" width="220" height="60" rx="8" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    <text x="230" y="235" font-family="monospace" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      ERROR
+    </text>
+    <text x="230" y="258" font-family="Arial, sans-serif" font-size="13" fill="white" text-anchor="middle">
+      (generic failure)
+    </text>
+
+    <!-- Big question mark -->
+    <text x="230" y="330" font-family="Arial, sans-serif" font-size="64" fill="rgba(255,255,255,0.5)" text-anchor="middle">
+      ?
+    </text>
+
+    <!-- Problems -->
+    <text x="130" y="380" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Retry? How many times?
+    </text>
+    <text x="130" y="405" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Timeout? Which value?
+    </text>
+    <text x="130" y="430" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Root cause? Unknown
+    </text>
+    <text x="130" y="455" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Recovery? Maybe
+    </text>
+    <text x="130" y="480" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FC8181" text-anchor="start">
+      → Non-deterministic
+    </text>
+
+    <!-- Bottom label -->
+    <rect x="100" y="455" width="260" height="18" rx="4" fill="#E53E3E"/>
+    <text x="230" y="467" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      NOT CERTIFIABLE
+    </text>
+  </g>
+
+  <!-- Arrow -->
+  <g id="arrow">
+    <path d="M 420 350 L 520 350" stroke="white" stroke-width="5" fill="none"/>
+    <path d="M 500 343 L 520 350 L 500 357" fill="white"/>
+    <text x="470" y="335" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">vs</text>
+  </g>
+
+  <!-- Right: Good (explicit) -->
+  <g id="explicit">
+    <text x="850" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      ✓ Explicit error codes
+    </text>
+    
+    <rect x="570" y="180" width="560" height="350" rx="12" fill="rgba(56, 161, 105, 0.3)" stroke="#38A169" stroke-width="3"/>
+    
+    <!-- 6 specific error codes in grid (matching article) -->
+    <!-- Row 1 -->
+    <rect x="600" y="200" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="715" y="221" font-family="monospace" font-size="10" font-weight="bold" fill="white" text-anchor="middle">
+      AUTH_TIMEOUT_CHALLENGE (0x01)
+    </text>
+
+    <rect x="870" y="200" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="985" y="221" font-family="monospace" font-size="10" font-weight="bold" fill="white" text-anchor="middle">
+      AUTH_TIMEOUT_RESPONSE (0x02)
+    </text>
+
+    <!-- Row 2 -->
+    <rect x="600" y="245" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="715" y="266" font-family="monospace" font-size="11" font-weight="bold" fill="white" text-anchor="middle">
+      HMAC_INVALID (0x03)
+    </text>
+
+    <rect x="870" y="245" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="985" y="266" font-family="monospace" font-size="11" font-weight="bold" fill="white" text-anchor="middle">
+      COUNTER_REPLAY (0x04)
+    </text>
+
+    <!-- Row 3 -->
+    <rect x="600" y="290" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="715" y="311" font-family="monospace" font-size="11" font-weight="bold" fill="white" text-anchor="middle">
+      KEY_NOT_FOUND (0x05)
+    </text>
+
+    <rect x="870" y="290" width="230" height="32" rx="5" fill="#38A169" stroke="white" stroke-width="1.5"/>
+    <text x="985" y="311" font-family="monospace" font-size="11" font-weight="bold" fill="white" text-anchor="middle">
+      TPM_ERROR (0x06)
+    </text>
+
+    <!-- Properties -->
+    <text x="850" y="350" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      Each code → Specific documented action
+    </text>
+    <text x="850" y="375" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      Bounded WCET proven (≤3.1s)
+    </text>
+    <text x="850" y="400" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      Testable &amp; verifiable in isolation
+    </text>
+    <text x="850" y="425" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#68D391" text-anchor="middle">
+      → Analyzable, bounded behavior
+    </text>
+
+    <!-- Bottom label -->
+    <rect x="680" y="455" width="340" height="18" rx="4" fill="#38A169"/>
+    <text x="850" y="467" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      CERTIFIABLE UNDER DO-326A
+    </text>
+  </g>
+
+  <!-- Bottom key insight -->
+  <rect x="150" y="505" width="900" height="50" rx="8" fill="rgba(0,0,0,0.4)" stroke="white" stroke-width="2"/>
+  <text x="600" y="535" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+    Every failure mode must be explicit, documented, bounded, and testable
+  </text>
+
+  <!-- Bottom text -->
+  <text x="600" y="625" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-style="italic">
+    Article 5 of 8: Security That Survives Certification
+  </text>
+</svg>
