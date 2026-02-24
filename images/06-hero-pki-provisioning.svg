@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Title -->
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    PKI Belongs in Provisioning, Not Runtime
+  </text>
+  <text x="600" y="95" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    Two Phases: Establish Trust Offline, Authenticate Deterministically
+  </text>
+
+  <!-- Left: Phase 1 - Provisioning (PKI) -->
+  <g id="provisioning">
+    <text x="250" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      Phase 1: Provisioning
+    </text>
+    <text x="250" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Factory/MRO (Offline)
+    </text>
+
+    <rect x="100" y="200" width="300" height="300" rx="12" fill="rgba(102, 126, 234, 0.3)" stroke="#667eea" stroke-width="3"/>
+    
+    <!-- Certificate chain pyramid -->
+    <rect x="140" y="220" width="220" height="45" rx="6" fill="#667eea" stroke="white" stroke-width="2"/>
+    <text x="250" y="243" font-family="monospace" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+      Root CA (HSM)
+    </text>
+    <text x="250" y="258" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.7)" text-anchor="middle">
+      Factory-confined
+    </text>
+
+    <path d="M 250 265 L 250 285" stroke="white" stroke-width="3"/>
+    
+    <rect x="160" y="290" width="180" height="40" rx="5" fill="#667eea" stroke="white" stroke-width="2"/>
+    <text x="250" y="315" font-family="monospace" font-size="12" fill="white" text-anchor="middle">
+      Device Cert
+    </text>
+
+    <path d="M 250 330 L 250 350" stroke="#38A169" stroke-width="4" stroke-dasharray="6,3"/>
+    <text x="315" y="345" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="start">Enables K_AG</text>
+    <text x="315" y="357" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="start">Provisioning</text>
+
+    <!-- Pairwise key generated -->
+    <rect x="180" y="365" width="140" height="30" rx="4" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="250" y="385" font-family="monospace" font-size="11" font-weight="bold" fill="white" text-anchor="middle">K_AG</text>
+    <text x="250" y="418" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Pairwise Authorization Key
+    </text>
+    
+    <!-- Arrow showing injection -->
+    <path d="M 250 428 L 250 443" stroke="#38A169" stroke-width="3" stroke-dasharray="4,2"/>
+    <text x="250" y="461" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      ↓ Provision to TPM/SE
+    </text>
+
+    <!-- Properties -->
+    <text x="130" y="480" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Timing constraints relaxed
+    </text>
+    <text x="130" y="496" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Infrastructure accessible
+    </text>
+  </g>
+
+  <!-- Arrow showing one-time transition -->
+  <g id="transition">
+    <path d="M 430 320 L 520 320" stroke="white" stroke-width="5" fill="none"/>
+    <path d="M 500 313 L 520 320 L 500 327" fill="white"/>
+    <text x="475" y="290" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="bold">
+      PROVISIONING-TIME
+    </text>
+    <text x="475" y="305" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="bold">
+      TRUST ESTABLISHMENT
+    </text>
+    <text x="475" y="350" font-family="Arial, sans-serif" font-size="11" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Factory provisioning cycle
+    </text>
+  </g>
+
+  <!-- Right: Phase 2 - Runtime (Symmetric) -->
+  <g id="runtime">
+    <text x="850" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      Phase 2: Runtime
+    </text>
+    <text x="850" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Field Operation (Autonomous)
+    </text>
+
+    <rect x="640" y="200" width="420" height="300" rx="12" fill="rgba(56, 161, 105, 0.3)" stroke="#38A169" stroke-width="3"/>
+    
+    <!-- Starting point: K_AG from TPM/SE -->
+    <rect x="775" y="220" width="150" height="40" rx="6" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="850" y="240" font-family="monospace" font-size="13" font-weight="bold" fill="white" text-anchor="middle">
+      K_AG (TPM/SE)
+    </text>
+    <text x="850" y="254" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.7)" text-anchor="middle">
+      Factory-provisioned
+    </text>
+
+    <path d="M 850 260 L 850 280" stroke="white" stroke-width="2"/>
+    <text x="900" y="275" font-family="Arial, sans-serif" font-size="10" fill="rgba(255,255,255,0.8)" text-anchor="start">
+      Derive with nonces
+    </text>
+    
+    <!-- Session key (simplified) -->
+    <rect x="775" y="285" width="150" height="32" rx="4" fill="#48BB78" stroke="white" stroke-width="1.5"/>
+    <text x="850" y="307" font-family="monospace" font-size="11" fill="white" text-anchor="middle">K_Session</text>
+    <text x="950" y="307" font-family="Arial, sans-serif" font-size="9" fill="rgba(255,255,255,0.7)" text-anchor="start">(per session)</text>
+
+    <path d="M 850 317 L 850 337" stroke="white" stroke-width="1.5"/>
+
+    <!-- Auth operation -->
+    <rect x="710" y="342" width="280" height="55" rx="6" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+    <text x="850" y="367" font-family="monospace" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      HMAC(K_Session, msg)
+    </text>
+    <text x="850" y="385" font-family="Arial, sans-serif" font-size="11" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+      Challenge-response authentication
+    </text>
+
+    <!-- Properties -->
+    <text x="660" y="425" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Autonomous operation
+    </text>
+    <text x="660" y="445" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Timing bounded (≤15s)
+    </text>
+    <text x="660" y="465" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • No external dependencies
+    </text>
+    <text x="660" y="485" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Deterministic (5 states)
+    </text>
+  </g>
+
+  <!-- Bottom key insight -->
+  <rect x="150" y="530" width="900" height="70" rx="8" fill="rgba(0,0,0,0.4)" stroke="white" stroke-width="2"/>
+  <text x="600" y="560" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+    Architectural Principle: Separate Trust Establishment from Runtime Authentication
+  </text>
+  <text x="600" y="585" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    PKI at provisioning (complex, infrastructure-backed) → Symmetric at runtime (bounded, deterministic)
+  </text>
+
+  <!-- Bottom text -->
+  <text x="600" y="625" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-style="italic">
+    Article 6 of 8: Security That Survives Certification
+  </text>
+</svg>
