@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Title -->
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    Security Teams That Don't Break Programs
+  </text>
+  <text x="600" y="95" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+    Architecture-Embedded vs Late-Stage Security
+  </text>
+
+  <!-- Left: Bad (Late-Stage) -->
+  <g id="gatekeeper">
+    <text x="230" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      ❌ Late-Stage Security
+    </text>
+    <text x="230" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Gatekeeping, variance injection
+    </text>
+
+    <rect x="80" y="200" width="300" height="330" rx="12" fill="rgba(229, 62, 62, 0.3)" stroke="#E53E3E" stroke-width="3"/>
+    
+    <!-- Linear flow -->
+    <rect x="120" y="220" width="220" height="40" rx="6" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    <text x="230" y="245" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white" text-anchor="middle">
+      Dev writes code
+    </text>
+
+    <path d="M 230 260 L 230 280" stroke="white" stroke-width="3"/>
+    <path d="M 225 273 L 230 280 L 235 273" fill="white"/>
+
+    <rect x="120" y="285" width="220" height="40" rx="6" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    <text x="230" y="310" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white" text-anchor="middle">
+      Security reviews
+    </text>
+
+    <path d="M 230 325 L 230 345" stroke="white" stroke-width="3"/>
+    <path d="M 225 338 L 230 345 L 235 338" fill="white"/>
+
+    <rect x="120" y="350" width="220" height="40" rx="6" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    <text x="230" y="367" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white" text-anchor="middle">
+      47 findings
+    </text>
+    <text x="230" y="383" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle">
+      "All must be fixed"
+    </text>
+
+    <path d="M 230 390 L 230 410" stroke="white" stroke-width="3"/>
+    <path d="M 225 403 L 230 410 L 235 403" fill="white"/>
+
+    <rect x="120" y="415" width="220" height="40" rx="6" fill="#E53E3E" stroke="white" stroke-width="2"/>
+    <text x="230" y="440" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="white" text-anchor="middle">
+      BLOCKED
+    </text>
+
+    <!-- Problems -->
+    <text x="130" y="475" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Creates variance
+    </text>
+    <text x="130" y="495" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • No guidance
+    </text>
+    <text x="130" y="515" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Schedule risk
+    </text>
+  </g>
+
+  <!-- Arrow -->
+  <g id="vs-arrow">
+    <path d="M 420 360 L 520 360" stroke="white" stroke-width="5" fill="none"/>
+    <path d="M 500 353 L 520 360 L 500 367" fill="white"/>
+    <text x="470" y="345" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">vs</text>
+  </g>
+
+  <!-- Right: Good (Architecture-Embedded) -->
+  <g id="purple-team">
+    <text x="850" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      ✓ Architecture-Embedded Security
+    </text>
+    <text x="850" y="175" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Upstream, variance control
+    </text>
+
+    <rect x="580" y="200" width="540" height="330" rx="12" fill="rgba(56, 161, 105, 0.3)" stroke="#38A169" stroke-width="3"/>
+    
+    <!-- Circular feedback loop -->
+    <!-- Dev box -->
+    <rect x="640" y="230" width="140" height="35" rx="5" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="710" y="252" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      Dev + Security
+    </text>
+
+    <!-- Arrow to Design -->
+    <path d="M 780 247 L 850 247" stroke="white" stroke-width="3"/>
+    <path d="M 843 242 L 850 247 L 843 252" fill="white"/>
+
+    <!-- Design box -->
+    <rect x="860" y="230" width="140" height="35" rx="5" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="930" y="252" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      Co-design
+    </text>
+
+    <!-- Arrow down -->
+    <path d="M 930 265 L 930 300" stroke="white" stroke-width="3"/>
+    <path d="M 925 293 L 930 300 L 935 293" fill="white"/>
+
+    <!-- Code box -->
+    <rect x="860" y="305" width="140" height="35" rx="5" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="930" y="327" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      Code + Review
+    </text>
+
+    <!-- Arrow down -->
+    <path d="M 930 340 L 930 375" stroke="white" stroke-width="3"/>
+    <path d="M 925 368 L 930 375 L 935 368" fill="white"/>
+
+    <!-- Test box -->
+    <rect x="860" y="380" width="140" height="35" rx="5" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="930" y="402" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      Test + Validate
+    </text>
+
+    <!-- Arrow left -->
+    <path d="M 860 397 L 780 397" stroke="white" stroke-width="3"/>
+    <path d="M 787 392 L 780 397 L 787 402" fill="white"/>
+
+    <!-- Deploy box -->
+    <rect x="640" y="380" width="140" height="35" rx="5" fill="#38A169" stroke="white" stroke-width="2"/>
+    <text x="710" y="402" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">
+      Deploy
+    </text>
+
+    <!-- Arrow up to close loop -->
+    <path d="M 710 380 L 710 265" stroke="white" stroke-width="3"/>
+    <path d="M 705 272 L 710 265 L 715 272" fill="white"/>
+
+    <!-- Feedback label -->
+    <text x="800" y="325" font-family="Arial, sans-serif" font-size="11" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      Continuous
+    </text>
+    <text x="800" y="340" font-family="Arial, sans-serif" font-size="11" fill="rgba(255,255,255,0.8)" text-anchor="middle">
+      feedback
+    </text>
+
+    <!-- Center circle -->
+    <circle cx="800" cy="325" r="40" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="5,3"/>
+
+    <!-- Benefits -->
+    <text x="600" y="455" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Early integration
+    </text>
+    <text x="600" y="475" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Controls variance
+    </text>
+    <text x="600" y="495" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Zero delays
+    </text>
+    <text x="600" y="515" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.9)" text-anchor="start">
+      • Patterns provided
+    </text>
+  </g>
+
+  <!-- Bottom key insight -->
+  <rect x="150" y="555" width="900" height="50" rx="8" fill="rgba(0,0,0,0.4)" stroke="white" stroke-width="2"/>
+  <text x="600" y="585" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+    Security either controls variance — or creates it.
+  </text>
+
+  <!-- Bottom text -->
+  <text x="600" y="625" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-style="italic">
+    Article 7 of 8: Security That Survives Certification
+  </text>
+</svg>
