@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Teams That Don't Break Programs</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover { color: #444; }
+        .toc-link.toc-h3.active { color: #667eea; }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        pre {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 32px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        code {
+            background: #F7F7F7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 16px;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .page-wrapper { flex-direction: column; gap: 0; padding: 20px; }
+            .toc-sidebar { display: none; }
+            .container { max-width: 100%; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            const tocLinks = document.querySelectorAll('.toc-link');
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                headings.forEach(heading => {
+                    if (scrollPosition >= heading.offsetTop) current = heading.id;
+                });
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC();
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+        </aside>
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 7 of 8</div>
+            <h1>Security Teams That Don't Break Programs</h1>
+            <div class="subtitle">How to integrate security without becoming a schedule blocker</div>
+        </div>
+
+        <img src="images/07-hero-security-teams.svg" alt="Blocker vs Force Multiplier Security Teams" class="hero-image">
+
+        <p>Your certification program is 6 months from DO-178C approval. Security review happens.</p>
+
+        <p>The security team sends: <strong>"47 findings. All CRITICAL. All must be fixed before release."</strong></p>
+
+        <p>Program management: <strong>"Schedule impact?"</strong></p>
+
+        <p>Security: <strong>"These are security issues."</strong></p>
+
+        <p><strong>The program slips 4 months.</strong></p>
+
+        <p>This pattern repeats. The security team becomes the blocker. Trust erodes. Next program, security gets involved later—or not at all.</p>
+
+        <div class="callout callout-danger">
+            <strong>Gatekeeping is a symptom of late security architecture.</strong> Security introduced as variance rather than embedded in architecture creates schedule risk that compounds through certification. DO-178C doesn't tolerate variance. Security that creates variance fails—even if technically excellent.
+        </div>
+
+        <h2>The Blocker Anti-Pattern</h2>
+
+        <p>Security teams become blockers when they operate as external validators rather than integrated architects.</p>
+
+        <p><strong>The gatekeeping model:</strong></p>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>❌ Security as Gatekeeper</h4>
+                <ul>
+                    <li>Reviews code after implementation</li>
+                    <li>Sends list of 47 findings</li>
+                    <li>No prioritization by actual risk</li>
+                    <li>No implementation guidance</li>
+                    <li>"Security" vs "Engineering"</li>
+                    <li>Measures findings count</li>
+                </ul>
+            </div>
+            <div class="comparison-card good">
+                <h4>✓ Security as Force Multiplier</h4>
+                <ul>
+                    <li>Threat model drives architecture</li>
+                    <li>Provides secure patterns library</li>
+                    <li>Prioritizes by certification impact</li>
+                    <li>Automates validation in CI/CD</li>
+                    <li>Embedded in engineering workflow</li>
+                    <li>Measures schedule impact</li>
+                </ul>
+            </div>
+        </div>
+
+        <p><strong>Why gatekeeping fails in certification programs:</strong></p>
+
+        <p>DO-178C and DO-326A are variance-minimization exercises. Late architectural changes don't add linearly—they compound through traceability, verification, and documentation. A single "fix this crypto usage" finding cascades into architecture updates, requirements re-verification, WCET re-analysis, test regeneration, FMEA updates, and DER review cycles.</p>
+
+        <p><strong>The certification multiplier:</strong> A 2-week code fix becomes an 8-week certification delta.</p>
+
+        <p>Security teams measured on findings count optimize for variance injection. The alternative: <strong>security must be amortized into architecture, not injected into schedule.</strong></p>
+
+        <h2>The Embedded Security Model</h2>
+
+        <p>Effective security in certification programs requires embedding security into engineering workflow, not adding it as a gate.</p>
+
+        <p><strong>Purple Team for embedded certification:</strong> Offensive thinking (red team) with defensive implementation (blue team). Security architects work with system engineers to identify attack vectors before architecture freeze. Security requirements derived from threat model become part of DO-178C baseline. Secure design patterns provided as reference implementations. Validation runs in CI/CD, not manual review.</p>
+
+        <p><strong>Key difference:</strong> Security provides patterns and automation. Engineering implements. No handoff. No gate. No variance.</p>
+
+        <h3>Threat Model → Architecture → Patterns</h3>
+
+        <p>Instead of generic "implement TLS" guidance, security provides context-specific patterns. Example: Aircraft-ground authentication with physical access threat model → Provisioning-time PKI + runtime symmetric auth (Article 6) → Reference implementation with WCET analysis and DO-178C test cases. Engineering implements from pattern. Zero variance.</p>
+
+        <h3>CI/CD Integration</h3>
+
+        <p>Security validation belongs in CI/CD, not manual review. Automate: cryptographic primitive usage, deterministic error handling, external dependency detection, WCET boundary violations. Manual review focuses on threat model alignment and architecture decisions—where human judgment matters. Mechanical validation runs on every commit.</p>
+
+        <h2>The Only Metric That Matters</h2>
+
+        <p>Security teams are measured by findings count. This is worse than wrong—it's counterproductive.</p>
+
+        <p>Findings count incentivizes finding more issues, not fixing the right issues. Severity ratings become CRITICAL when security owns severity. Coverage metrics measure activity, not risk reduction.</p>
+
+        <p>None measure what certification programs need: <strong>zero schedule variance.</strong></p>
+
+        <div class="callout callout-success">
+            <strong>The Right Metric: Schedule Impact</strong>
+            <p style="margin-top: 12px; margin-bottom: 0;"><strong>Zero unplanned schedule delay caused by security findings.</strong></p>
+            <p style="margin-top: 12px; margin-bottom: 0;">If security findings consistently cause schedule variance, security architecture happened too late.</p>
+        </div>
+
+        <p>This metric aligns security team incentives with program success. Teams measured on schedule impact work upstream, provide patterns, automate validation, and prioritize by actual risk. Teams measured on findings count optimize for friction.</p>
+
+        <h2>Prioritization by Actual Risk</h2>
+
+        <p>Not all security findings have equal certification impact. Standard risk frameworks (CVSS) don't account for certification constraints.</p>
+
+        <p><strong>Certification-aware prioritization considers:</strong> Exploitability in operational context (physical access? network access?), impact on certification artifacts (architecture changes? WCET re-analysis?), and threat model alignment (is this attack in scope?).</p>
+
+        <p><strong>Example contrast:</strong> Weak RNG in test code = traditional severity HIGH, actual risk LOW (test code not certified, no operational impact, don't block release). Ambiguous crypto failure mode = traditional severity MEDIUM, actual risk CRITICAL (non-deterministic failure breaks WCET analysis, creates certification finding, fix immediately).</p>
+
+        <p><strong>Pattern library approach:</strong> Most effective risk mitigation is providing pre-approved patterns that are threat-modeled, WCET-analyzed, and verified against DO-178C/DO-326A. When engineering implements from patterns, security findings drop to integration errors, not architecture problems. Security work shifts from reactive (reviewing) to proactive (building patterns).</p>
+
+        <h2>Conclusion: Security as Architecture</h2>
+
+        <p>The title is "Security Teams That Don't Break Programs."</p>
+
+        <p>The principle: <strong>Security teams either control variance—or create it.</strong></p>
+
+        <p>Late security reviews inject variance into certification programs. Variance compounds through traceability. Security teams measured on findings count optimize for variance injection.</p>
+
+        <p><strong>The alternative model:</strong> Security embedded in architecture phase, patterns provided to engineering, validation automated in CI/CD, measured on schedule impact.</p>
+
+        <div class="callout callout-success">
+            <strong>Core Principle:</strong> Security must be amortized into architecture, not injected into schedule. Teams that operate upstream become program enablers. Teams that operate downstream become program blockers.
+        </div>
+
+        <p><strong>For certification programs:</strong> Security that cannot be certified on schedule is indistinguishable from no security at all. The goal isn't perfect security. The goal is certifiable security, delivered without variance.</p>
+
+        <p><strong>Final truth:</strong> Certification programs don't fail because of cryptography. They fail because of unmanaged variance. Security teams either control variance—or create it. There is no middle ground.</p>
+
+        <p>Security teams that understand this become indispensable. Security teams that don't become irrelevant.</p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Next in series:</strong> Article 8 - Why This Architecture Works<br>
+            Final synthesis: How the architectural principles from articles 1-7 form a coherent system that survives certification while remaining operationally practical.</p>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>About this series: Security That Survives Certification is an 8-part series on building cybersecurity architectures that work in safety-critical embedded systems. Target audience: Staff/Principal Engineers, Security Architects, DERs, Technical CISOs working in avionics, automotive, medical devices, and other safety-critical domains.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
