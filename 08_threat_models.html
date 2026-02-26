@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Models That Survive Certification</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #292929;
+            background: #fff;
+            font-size: 20px;
+        }
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 60px;
+            padding: 40px 20px;
+        }
+        .toc-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        .toc-sticky {
+            position: sticky;
+            top: 40px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #757575;
+            margin-bottom: 16px;
+        }
+        .toc-list {
+            list-style: none;
+        }
+        .toc-item {
+            margin-bottom: 8px;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            line-height: 1.4;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .toc-link:hover {
+            color: #000;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+        }
+        .toc-link.active {
+            color: #667eea;
+            border-left-color: #667eea;
+            background: #f7f7f7;
+            font-weight: 600;
+        }
+        .toc-link.toc-h3 {
+            font-size: 14px;
+            padding-left: 24px;
+            color: #888;
+        }
+        .toc-link.toc-h3:hover { color: #444; }
+        .toc-link.toc-h3.active { color: #667eea; }
+        .container {
+            max-width: 900px;
+            flex: 1;
+            min-width: 0;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin: 48px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .series-tag {
+            font-size: 14px;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 56px;
+            margin-bottom: 24px;
+            color: #000;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            color: #000;
+        }
+        p {
+            margin-bottom: 28px;
+        }
+        .subtitle {
+            font-size: 24px;
+            color: #757575;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+        .callout {
+            background: #F7F7F7;
+            border-left: 4px solid #000;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .callout-danger {
+            background: #FFF5F5;
+            border-left-color: #E53E3E;
+        }
+        .callout-success {
+            background: #F0FFF4;
+            border-left-color: #38A169;
+        }
+        .callout-warning {
+            background: #FFFAF0;
+            border-left-color: #DD6B20;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        .comparison-card {
+            padding: 24px;
+            border-radius: 8px;
+            border: 2px solid #E2E8F0;
+        }
+        .comparison-card.bad {
+            border-color: #FC8181;
+            background: #FFF5F5;
+        }
+        .comparison-card.good {
+            border-color: #68D391;
+            background: #F0FFF4;
+        }
+        .comparison-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 32px 0;
+            font-size: 16px;
+        }
+        th {
+            background: #F7F7F7;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 2px solid #E2E8F0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 28px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            h2 { font-size: 24px; }
+            .comparison { grid-template-columns: 1fr; }
+            .page-wrapper { flex-direction: column; gap: 0; padding: 20px; }
+            .toc-sidebar { display: none; }
+            .container { max-width: 100%; }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const headings = container.querySelectorAll('h2, h3');
+            const tocList = document.getElementById('toc-list');
+            headings.forEach((heading, index) => {
+                const id = 'section-' + index;
+                heading.id = id;
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'toc-link toc-' + heading.tagName.toLowerCase();
+                link.textContent = heading.textContent;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    history.pushState(null, null, '#' + id);
+                });
+                li.appendChild(link);
+                tocList.appendChild(li);
+            });
+            const tocLinks = document.querySelectorAll('.toc-link');
+            function highlightTOC() {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+                headings.forEach(heading => {
+                    if (scrollPosition >= heading.offsetTop) current = heading.id;
+                });
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', highlightTOC);
+            highlightTOC();
+        });
+    </script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <aside class="toc-sidebar">
+            <div class="toc-sticky">
+                <div class="toc-title">Table of Contents</div>
+                <ul id="toc-list" class="toc-list"></ul>
+            </div>
+        </aside>
+        <div class="container">
+        <div class="hero">
+            <div class="series-tag">Security That Survives Certification • Article 8 of 8</div>
+            <h1>Threat Models That Survive Certification</h1>
+            <div class="subtitle">Where architecture, determinism, and operational reality converge</div>
+        </div>
+
+        <img src="images/08-hero-threat-models.svg" alt="Certifiable vs Generic Threat Models" class="hero-image">
+
+        <p>This is where the previous seven articles converge.</p>
+
+        <p>Runtime determinism (Articles 1, 2, 5). Offline PKI discipline (Article 6). Revocation reality (Article 3). CAN constraints (Article 4). Variance control (Article 7). All of these architectural principles exist to solve one problem: <strong>certification programs demand coherence between threat model, architecture, and verification.</strong></p>
+
+        <p>Threat modeling is not a security activity. It is an architectural discipline where design decisions are forced to confront operational reality.</p>
+
+        <div class="callout callout-warning">
+            <strong>Core Principle:</strong> If your threat model is not traceable to architecture, requirements, and safety hazards, it is not a threat model. It is a brainstorming document. Certification does not reward theoretical completeness. It rewards architectural coherence.
+        </div>
+
+        <h2>The DER Rejection Pattern</h2>
+
+        <p>DERs reject threat models for one fundamental reason: <strong>untraceable claims.</strong></p>
+
+        <p>Your threat model document says: "System shall resist spoofed CAN messages."</p>
+
+        <p>DER asks: "Show me the requirement trace."</p>
+
+        <p>You point to: REQ-SEC-042 "CAN authentication required"</p>
+
+        <p>DER asks: "Show me the architecture."</p>
+
+        <p>You show: HMAC-based challenge-response with 28-bit MAC</p>
+
+        <p>DER asks: "Show me the verification."</p>
+
+        <p>You show: Test case TC-AUTH-015 validates replay protection</p>
+
+        <p>DER asks: "Show me the safety integration."</p>
+
+        <p><strong>This is where most threat models fail.</strong></p>
+
+        <p>The threat was modeled. The requirement exists. The code was written. The test passed. But the threat model was never integrated into the safety analysis. The security threat has no linkage to system hazards. The FMEA doesn't reference the authentication failure mode. ARP4761 hazard analysis doesn't include the spoofing scenario.</p>
+
+        <p>DER conclusion: <strong>Threat model is not part of the certified design.</strong></p>
+
+        <h2>Generic vs Certifiable Threat Models</h2>
+
+        <p>Generic threat models enumerate possibilities. Certifiable threat models trace architectural decisions.</p>
+
+        <div class="comparison">
+            <div class="comparison-card bad">
+                <h4>❌ Generic Threat Model</h4>
+                <ul>
+                    <li>Lists all possible attacks</li>
+                    <li>Theoretical completeness</li>
+                    <li>STRIDE enumeration</li>
+                    <li>No architecture linkage</li>
+                    <li>No safety integration</li>
+                    <li>Not traceable to requirements</li>
+                </ul>
+                <p><strong>DER reaction:</strong> "This is a security study, not a design artifact."</p>
+            </div>
+            <div class="comparison-card good">
+                <h4>✓ Certifiable Threat Model</h4>
+                <ul>
+                    <li>Scoped to operational context</li>
+                    <li>Traceable to architecture</li>
+                    <li>Linked to safety hazards</li>
+                    <li>Requirements derived and verified</li>
+                    <li>FMEA integration</li>
+                    <li>Test cases validate mitigations</li>
+                </ul>
+                <p><strong>DER reaction:</strong> "This is integrated into the design baseline."</p>
+            </div>
+        </div>
+
+        <p><strong>The difference:</strong> Generic threat models ask "what could happen?" Certifiable threat models answer "what did we decide, and how do we verify it?"</p>
+
+        <h2>The Traceability Matrix</h2>
+
+        <p>Certifiable threat models live in traceability, not in narrative documents.</p>
+
+        <p><strong>Example: CAN Message Spoofing Threat</strong></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Threat</th>
+                    <th>Requirement</th>
+                    <th>Architecture</th>
+                    <th>Verification</th>
+                    <th>Safety Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>T-CAN-001:<br>Spoofed flight control command</td>
+                    <td>REQ-SEC-042:<br>CAN auth required</td>
+                    <td>ARCH-AUTH-03:<br>HMAC challenge-response</td>
+                    <td>TC-AUTH-015:<br>Replay protection validated</td>
+                    <td>FMEA-012:<br>Auth failure → safe state</td>
+                </tr>
+                <tr>
+                    <td>T-CAN-002:<br>Replay attack on authenticated message</td>
+                    <td>REQ-SEC-043:<br>Replay protection</td>
+                    <td>ARCH-AUTH-04:<br>Counter-based freshness</td>
+                    <td>TC-AUTH-016:<br>Counter validation</td>
+                    <td>FMEA-012:<br>Counter desync → alert</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>This is certifiable. Every threat traces to a requirement. Every requirement maps to an architectural decision. Every architectural decision has verification. Every failure mode links to safety analysis.</p>
+
+        <p><strong>What makes it certifiable:</strong> It's not the threats themselves—it's the traceability. The DER can follow the chain from threat to hazard to mitigation to verification.</p>
+
+        <h2>Safety-Security Integration</h2>
+
+        <p>Security threats that don't link to safety hazards are ignored in certification reviews.</p>
+
+        <p><strong>The integration requirement:</strong> Every security threat must answer: "If this attack succeeds, what is the safety impact?" If the answer is "no safety impact," the threat doesn't require certification effort. If the answer is "potential hazard," the threat must integrate into ARP4761 hazard analysis and FMEA.</p>
+
+        <p><strong>Example integration:</strong></p>
+
+        <p><strong>Security Threat:</strong> T-CAN-001 Spoofed flight control command<br>
+        <strong>Safety Hazard:</strong> H-FCS-042 Uncommanded flight control surface movement<br>
+        <strong>FMEA Entry:</strong> Authentication failure → Flight control command rejected → Safe state (surface holds last valid position)<br>
+        <strong>Severity:</strong> Catastrophic (if unmitigated)<br>
+        <strong>Mitigation:</strong> HMAC authentication with deterministic failure mode<br>
+        <strong>Residual Risk:</strong> Remote (mitigated to acceptable level)</p>
+
+        <p>This is how threat models survive certification. The threat isn't analyzed in isolation—it's integrated into the system hazard analysis that already exists for DO-178C/ARP4754A compliance.</p>
+
+        <h2>Attack Surface Scoping</h2>
+
+        <p>Certifiable threat models scope attack surface to operational reality, not theoretical possibility.</p>
+
+        <p><strong>Generic approach:</strong> List every conceivable interface (USB ports, debug interfaces, wireless, network, physical access, supply chain, side channels, timing attacks, power analysis). Result: 200-page threat catalog, most scenarios not operationally relevant.</p>
+
+        <p><strong>Certifiable approach:</strong> Define adversary model from operational context. Example: Aircraft maintenance scenario—adversary is technician with physical access to ground tool, network control between tool and aircraft, no access to aircraft interior during flight. Attack surface: Ground tool authentication interface, CAN bus between tool and aircraft LRU, provisioning interfaces. Excluded: In-flight attacks (no adversary access), supply chain (separate certification concern), side channels (not in adversary capability model).</p>
+
+        <p>DERs prefer narrow, defensible scoping over broad theoretical coverage. The question isn't "did you consider everything?" The question is "can you justify your boundaries?"</p>
+
+        <h2>Risk Prioritization for Certification</h2>
+
+        <p>Not all threats require equal certification effort.</p>
+
+        <p><strong>Certification-aware prioritization:</strong> Impact on safety (does this threat map to a system hazard?), architectural complexity (does mitigation require architecture changes after baseline freeze?), verification burden (can we test this within DO-178C structural coverage requirements?), traceability cost (does this create new requirement traces through multiple documents?).</p>
+
+        <p><strong>Example: Authentication timing side channel.</strong> Traditional security severity: HIGH (timing attacks can leak key material). Certification priority: LOW (requires sustained physical access during auth, not in adversary model; mitigation would require constant-time crypto, forcing WCET re-analysis across stack). DER assessment: "Acknowledge as residual risk, document threat model boundary, don't retrofit mitigation."</p>
+
+        <p><strong>Example: Replay attack on authenticated command.</strong> Traditional severity: MEDIUM (already authenticated, just replayed). Certification priority: CRITICAL (maps directly to safety hazard H-FCS-042, affects flight control surface, requires deterministic failure mode). DER assessment: "This must be mitigated, verified, and traced to FMEA."</p>
+
+        <p>Certification doesn't prioritize by CVSS score. It prioritizes by safety integration and architectural coherence.</p>
+
+        <h2>Document Structure That Survives Review</h2>
+
+        <p>Certifiable threat models don't need to be long. They need to be traceable.</p>
+
+        <p><strong>Essential elements:</strong> Adversary model (who, capabilities, access), attack surface scope (interfaces in scope, explicit exclusions), threat-to-requirement mapping (every threat → requirement ID), architecture decisions (for each threat, what design choice mitigates it), verification approach (how each mitigation is tested), safety integration (threat → hazard → FMEA linkage).</p>
+
+        <p><strong>What to exclude:</strong> STRIDE methodology explanation (DER doesn't care about your process), theoretical attack enumeration (focus on scoped threats), generic security principles (don't explain defense-in-depth; show where you applied it), implementation details (threat model is architecture-level, not code-level).</p>
+
+        <p>A 30-page threat model with complete traceability survives review better than a 200-page comprehensive security analysis with no requirement linkage.</p>
+
+        <h2>Conclusion: Architectural Coherence</h2>
+
+        <p>The title is "Threat Models That Survive Certification."</p>
+
+        <p>The principle: <strong>Threat modeling is where all architectural decisions are forced to confront operational reality.</strong></p>
+
+        <p>Articles 1-7 established architectural constraints:</p>
+        <ul>
+            <li><strong>Article 1:</strong> PKI creates state explosion → Threat model must justify why runtime PKI is excluded</li>
+            <li><strong>Article 2:</strong> TLS doesn't fit message buses → Threat model must scope to CAN-appropriate auth</li>
+            <li><strong>Article 3:</strong> Runtime revocation is operationally fragile → Threat model must address revocation through provisioning</li>
+            <li><strong>Article 4:</strong> CAN has frame budget constraints → Threat model must work within 28-bit MAC limits</li>
+            <li><strong>Article 5:</strong> Deterministic failure is required → Threat model must define explicit failure modes</li>
+            <li><strong>Article 6:</strong> PKI belongs in provisioning → Threat model must separate trust establishment from runtime auth</li>
+            <li><strong>Article 7:</strong> Security must control variance → Threat model must be embedded in architecture, not injected late</li>
+        </ul>
+
+        <p><strong>Article 8 synthesizes:</strong> The threat model is where these constraints converge. It's not a separate security deliverable. It's the architectural artifact that proves your design decisions are coherent, traceable, and verifiable.</p>
+
+        <div class="callout callout-success">
+            <strong>Final Truth:</strong> Certification does not reward theoretical completeness. It rewards architectural coherence. A threat model that cannot be traced to architecture, tested in verification, and linked to safety hazards will not survive review. Threat modeling is not a security activity. It is an architectural discipline.
+        </div>
+
+        <p><strong>For DERs and certification authorities:</strong> The question isn't "did you model all possible threats?" The question is "can you trace every security decision through requirements, architecture, verification, and safety analysis?"</p>
+
+        <p>Threat models either demonstrate coherence—or they demonstrate that security was an afterthought.</p>
+
+        <p><strong>There is no middle ground.</strong></p>
+
+        <div style="margin-top: 64px; padding-top: 32px; border-top: 2px solid #E2E8F0;">
+            <p style="font-size: 16px; color: #718096;"><strong>Series Complete:</strong> Security That Survives Certification</p>
+
+            <p style="font-size: 14px; color: #718096; margin-top: 24px;"><em>This 8-part series established an architectural framework for cybersecurity in safety-critical embedded systems. The principles apply across avionics, automotive, medical devices, and other certification domains where security must integrate with safety without creating schedule variance.</em></p>
+        </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
+</body>
+</html>
